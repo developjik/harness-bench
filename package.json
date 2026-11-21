@@ -1,0 +1,46 @@
+{
+  "name": "harness-bench",
+  "version": "0.1.0",
+  "description": "Benchmark coding-agent harnesses on your own repository: mine test+impl commits, run each harness in an isolated git worktree, score the patches.",
+  "keywords": [
+    "benchmark",
+    "coding-agent",
+    "harness",
+    "claude-code",
+    "codex",
+    "opencode",
+    "damon",
+    "evaluation"
+  ],
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "harness-bench": "dist/bin/cli.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "README.ko.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "demo": "node scripts/demo.mjs",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.10.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^9.6.0",
+    "@types/node": "^22.10.2",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.7"
+  }
+}

@@ -1,0 +1,13 @@
+node_modules/
+dist/
+coverage/
+
+# harness-bench runtime data
+.harness-bench/
+.harness-bench-*/
+reports/
+*.log
+
+# local scratch
+tmp/
+.DS_Store
