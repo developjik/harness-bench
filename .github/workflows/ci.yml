@@ -51,7 +51,7 @@ jobs:
 
       - name: upload demo report
         if: matrix.node == 22
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: demo-report
           path: reports/demo.html
