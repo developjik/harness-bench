@@ -32,7 +32,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "demo": "node scripts/demo.mjs",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "postbuild": "node -e \"require('node:fs').chmodSync('dist/bin/cli.js', 0o755)\""
   },
   "dependencies": {
     "better-sqlite3": "^11.10.0"
