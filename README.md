@@ -11,6 +11,7 @@ only the test hunks applied, and has to make the tests pass inside an isolated `
 
 - **Your stack, not a synthetic toy.** Your test runner, your conventions, your flaky test, your monorepo.
 - **Contamination-free base.** The base commit is the parent of the mined commit; the implementation is removed, the tests stay.
+- **Your dependencies.** Installed `node_modules` / `.venv` are symlinked into the worktree, so the repository's own test command runs unchanged.
 - **Harness vs harness.** `claude-code`, `codex`, `opencode`, `damon`, plus a mock driver, behind one adapter interface.
 - **Zero-token demo.** `npm run demo` proves the whole pipeline without spending a cent.
 
@@ -175,6 +176,9 @@ damon prompt "<task prompt>" --backend claude
   single numbers.
 - **Root-level test command.** The inferred command runs at the repository root. Monorepos should pass
   `--test-cmd "pnpm -w test"` or a package-scoped command.
+- **Dependencies are symlinked, not installed.** `node_modules` and `.venv` are linked into the worktree
+  from the source checkout (`--no-link-deps` turns this off). A harness that changes `package.json`
+  dependencies still needs its own install step.
 - **Flaky tests hurt.** The baseline run records which tests already fail; regressions are judged against
   that baseline, not against a green suite.
 - **Test-editing harnesses are flagged, not blocked.** A harness could weaken assertions; the report

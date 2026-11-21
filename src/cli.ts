@@ -75,6 +75,8 @@ const BOOLEAN_FLAGS = new Set([
   'baseline',
   'no-baseline',
   'keep-worktree',
+  'link-deps',
+  'no-link-deps',
   'no-color',
   'force',
   'quiet',
@@ -217,6 +219,7 @@ run OPTIONS
   --mock-mode <mode>      oracle | partial | noop (default: oracle)
   --no-baseline           Skip the baseline test run on the prepared base
   --keep-worktree         Keep worktrees after the run (useful for debugging)
+  --no-link-deps          Do not symlink node_modules/.venv from the repo into the worktree
   --damon-backend <id>    Backend for the damon driver (default: claude)
   --store <sqlite|jsonl>  Task store backend (default: auto-detect)
 
@@ -406,6 +409,7 @@ async function commandRun(parsed: ParsedArgs, io: CliIo): Promise<number> {
     mockMode,
     runBaseline,
     keepWorktree: parsed.booleans.has('keep-worktree'),
+    linkDeps: !parsed.booleans.has('no-link-deps'),
     extraArgs: [],
     env: damonBackend ? { HARNESS_DAMON_BACKEND: damonBackend } : {},
     onProgress: wantsJson(parsed) || parsed.booleans.has('quiet') ? undefined : (line) => io.out(`${line}\n`),

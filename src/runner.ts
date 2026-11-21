@@ -14,6 +14,7 @@ import {
   repoRoot,
 } from './git.js';
 import { patchStats } from './diff.js';
+import { linkWorktreeDependencies } from './deps.js';
 import { scoreRun } from './scorer.js';
 import { emptyTestSummary, runTests } from './testrun.js';
 import type { MinedTask, MockMode, RunResult, TestSummary } from './types.js';
@@ -31,6 +32,8 @@ export interface RunOptions {
   mockMode: MockMode;
   runBaseline: boolean;
   keepWorktree: boolean;
+  /** Symlink installed dependencies (node_modules, .venv) into the worktree. Default true. */
+  linkDeps?: boolean;
   extraArgs?: string[];
   env?: NodeJS.ProcessEnv;
   onProgress?: (line: string) => void;
@@ -110,6 +113,11 @@ export async function runTaskWithDriver(task: MinedTask, driver: HarnessDriver, 
       }
     }
     commitAll(worktreePath, `harness-bench: prepare ${task.id} (base ${shortSha(task.baseCommit)} + tests)`);
+
+    const linked = options.linkDeps === false ? [] : linkWorktreeDependencies(repo, worktreePath);
+    if (linked.length > 0) {
+      logTo(logPath, `\n## linked dependencies\n${linked.map((entry) => `${entry.path} -> ${entry.target}`).join('\n')}\n`);
+    }
 
     if (options.runBaseline) {
       options.onProgress?.(`  · baseline tests ${task.id} [${driverLabel}]`);
