@@ -1,5 +1,7 @@
 # harness-bench
 
+[English](README.md) · 한국어
+
 [![ci](https://github.com/developjik/harness-bench/actions/workflows/ci.yml/badge.svg)](https://github.com/developjik/harness-bench/actions/workflows/ci.yml)
 
 **내 리포 × 내 하네스.** 공개 벤치마크의 과제는 남의 코드입니다. harness-bench는 **내 git 히스토리**에서
@@ -53,6 +55,11 @@ MATRIX
 task                                mock:oracle  mock:noop
 harness-bench-demo-…-83fa2757       1.00 ✓ 1/1   0.10 ✗ 0/1
 harness-bench-demo-…-69f0d595       1.00 ✓ 2/2   0.10 ✗ 0/2
+
+DRIVER SUMMARY
+driver            runs   mean  pass@1   median  files   diff  errors
+mock:oracle          2   1.00    100%      4ms    1.0   1.00       0
+mock:noop            2   0.10      0%      0ms    0.0   0.00       0
 ```
 
 ## 내 리포에 바로 쓰기
@@ -66,6 +73,9 @@ harness-bench run --repo . --driver mock --dry-run   # 토큰 없이 파이프�
 harness-bench run --repo . --driver claude-code --limit 3 --timeout 900
 harness-bench report --format html           # reports/harness-bench-<timestamp>.html
 ```
+
+`mine`은 구현과 함께 테스트를 추가하거나 바꾸는 커밋을 필요로 합니다. 테스트를 별도 리포에 두는 경우
+`--repo`를 코드 리포로 지정하고 `--test-cmd`를 넘기세요.
 
 ## CLI
 
@@ -140,7 +150,8 @@ damon prompt "<과제 프롬프트>" --backend claude
 - 백엔드는 `--damon-backend`(또는 `HARNESS_DAMON_BACKEND`)로 선택하며 기본값은 `claude`입니다.
 - Damon은 비밀을 보관하지 않습니다. 백엔드 CLI가 미리 설치·로그인돼 있어야 합니다.
 - Damon이 세션과 히스토리를 남기므로 하네스 실행 하나가 곧 Damon 세션 하나입니다. `damon sessions`,
-  `damon search "<task id>"`로 에이전트가 한 일을, `.harness-bench/logs/`의 실행 로그와 나란히 볼 수 있습니다.
+  `damon search "<task id>"`로 에이전트가 한 일을, `harness-bench`가 `.harness-bench/logs/`에 남기는 실행 로그와
+  나란히 볼 수 있습니다.
 - Damon의 worktree 기능(`damon worktree create . --pr 123`)은 *PR 작업*을 격리하고, harness-bench는
   *벤치마크 체크아웃*을 격리합니다. 서로 보완적입니다.
 
@@ -160,7 +171,7 @@ damon prompt "<과제 프롬프트>" --backend claude
   `mine`은 명백한 노이즈(락파일, 문서, 테스트 삭제, 과대 diff)를 거르지만 의도까지 판단하지 못합니다.
 - **표본이 작으면 노이즈가 큽니다.** 과제×하네스 1회는 품질보다 LLM 분산을 보여줍니다. 최소 10개
   과제, 여러 회 반복 후 중앙값으로 판단하세요.
-- **테스트 명령은 리포 루트 기준입니다.** 모노레포는 `--test-cmd`로 패키지 범위 명령을 넘기세요.
+- **테스트 명령은 리포 루트 기준입니다.** 모노레포는 `--test-cmd "pnpm -w test"`나 패키지 범위 명령을 넘기세요.
 - **의존성은 설치가 아니라 링크입니다.** `node_modules`·`.venv`를 소스 체크아웃에서 worktree로
   심볼릭 링크합니다(`--no-link-deps`로 끔). `package.json` 의존성을 바꾸는 과제는 하네스가 직접 설치해야
   합니다.

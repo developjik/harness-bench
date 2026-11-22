@@ -1,5 +1,7 @@
 # harness-bench
 
+[한국어](README.ko.md) · English
+
 [![ci](https://github.com/developjik/harness-bench/actions/workflows/ci.yml/badge.svg)](https://github.com/developjik/harness-bench/actions/workflows/ci.yml)
 
 **My repo × my harness.** Benchmark coding-agent harnesses on the repository you actually work in.
