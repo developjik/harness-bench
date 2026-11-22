@@ -4,6 +4,8 @@
 
 [![ci](https://github.com/developjik/harness-bench/actions/workflows/ci.yml/badge.svg)](https://github.com/developjik/harness-bench/actions/workflows/ci.yml)
 
+> **npm:** install the scoped package — `npm i @developjik/harness-bench`. The unscoped `harness-bench` on npm is a different project.
+
 **My repo × my harness.** Benchmark coding-agent harnesses on the repository you actually work in.
 
 Public coding-agent benchmarks are saturating, and the tasks are somebody else's code. `harness-bench`
@@ -120,6 +122,39 @@ that rewrites the tests is suspect, and the report flags it).
 `--driver` takes a comma-separated list. Real harnesses need their CLI installed and logged in; the
 env override points at a binary in a non-standard location. `run --dry-run` substitutes the mock driver
 and logs the command line that would have been executed.
+
+### Verified harnesses
+
+End-to-end runs against a real harness (one task mined from a small `node --test` repository, one
+task × one driver):
+
+| harness | version | backend | environment | verified | result |
+| --- | --- | --- | --- | --- | --- |
+| `damon` (+ `damond`) | 0.8.0 | `omp` 19.1.0 | macOS 27.0.1 arm64, Node 25 | 2026-11-22 | baseline 0/1 → final 2/2, score 0.96 |
+
+Reproduce:
+
+```sh
+damond &            # the driver shells out to `damon prompt`
+harness-bench mine --repo <small-repo> --data-dir /tmp/hb-e2e --store jsonl
+harness-bench run --repo <small-repo> --data-dir /tmp/hb-e2e --store jsonl \
+    --driver damon --damon-backend omp
+harness-bench report --data-dir /tmp/hb-e2e --store jsonl --format html
+```
+
+A harness may `git commit` inside the worktree — the run diffs the prepared base commit, so committed
+work is still collected into the patch.
+
+### Integration tests
+
+`test/integration.test.ts` exercises the real driver path end to end. It is opt-in only — CI never
+sets the flag, so `npm test` skips it:
+
+```sh
+HARNESS_BENCH_INTEGRATION=1 HARNESS_DAMON_BACKEND=omp npm test
+# a different harness:
+HARNESS_BENCH_INTEGRATION=1 HARNESS_BENCH_INTEGRATION_DRIVER=opencode npm test
+```
 
 ### Adding a driver
 

@@ -46,6 +46,8 @@ export interface TestSummary {
   passRate: number;
   failedTests: string[];
   countsKnown: boolean;
+  /** Counts were parsed, but a failing exit code says they cannot explain the run. */
+  countsUncertain?: boolean;
   durationMs: number;
   timedOut?: boolean;
   note?: string;

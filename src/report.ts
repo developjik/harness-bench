@@ -49,7 +49,7 @@ function scoreLabel(result: RunResult, color: boolean): string {
 function testsLabel(result: RunResult): string {
   if (!result.test.ran) return 'not run';
   if (!result.test.countsKnown) return result.test.exitCode === 0 ? 'pass' : 'fail';
-  return `${result.test.passed}/${result.test.total}`;
+  return `${result.test.passed}/${result.test.total}${result.test.countsUncertain ? '?' : ''}`;
 }
 
 function cellFor(result: RunResult, color: boolean): string {
@@ -207,13 +207,7 @@ export function renderHtml(results: RunResult[], meta: ReportMeta, options: Html
           const width = score === undefined ? 0 : Math.round((score / Math.max(maxScore, 1)) * 100);
           const band = score === undefined ? 'muted' : scoreBand(score);
           const mark = result.error ? '✖' : result.test.ran && result.test.failed === 0 && result.test.exitCode === 0 ? '✓' : '✗';
-          const tests = !result.test.ran
-            ? 'not run'
-            : result.test.countsKnown
-              ? `${result.test.passed}/${result.test.total}`
-              : result.test.exitCode === 0
-                ? 'pass'
-                : 'fail';
+          const tests = testsLabel(result);
           return `<td class="matrix-cell"><div class="cell">
             <span class="score ${band}">${score === undefined ? '—' : score.toFixed(2)}</span>
             <span class="mark ${band}">${mark}</span>

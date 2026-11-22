@@ -4,6 +4,8 @@
 
 [![ci](https://github.com/developjik/harness-bench/actions/workflows/ci.yml/badge.svg)](https://github.com/developjik/harness-bench/actions/workflows/ci.yml)
 
+> **npm:** 스코프 패키지로 설치하세요 — `npm i @developjik/harness-bench`. 스코프 없는 `harness-bench`는 다른 프로젝트입니다.
+
 **내 리포 × 내 하네스.** 공개 벤치마크의 과제는 남의 코드입니다. harness-bench는 **내 git 히스토리**에서
 벤치마크 과제를 캐냅니다. 구현 파일과 테스트 파일을 함께 바꾼 커밋이 곧 하나의 과제가 됩니다.
 하네스는 그 변경 **직전** 체크아웃에 테스트 hunk만 적용된 상태를 받고, 격리된 `git worktree` 안에서
@@ -118,6 +120,37 @@ harness-bench report --format html           # reports/harness-bench-<timestamp>
 `--driver`는 콤마로 여러 개를 받습니다. 실제 하네스는 CLI가 설치·로그인돼 있어야 하고, 환경변수로
 비표준 위치의 바이너리를 지정할 수 있습니다. `run --dry-run`은 mock으로 대체하고 실행했을 명령줄을
 로그에 남깁니다.
+
+### 검증된 하네스
+
+실제 하네스를 이용한 종단 간 실행(작은 `node --test` 리포에서 채굴한 과제 1개 × 드라이버 1개):
+
+| 하네스 | 버전 | 백엔드 | 환경 | 검증일 | 결과 |
+| --- | --- | --- | --- | --- | --- |
+| `damon` (+ `damond`) | 0.8.0 | `omp` 19.1.0 | macOS 27.0.1 arm64, Node 25 | 2026-11-22 | 베이스라인 0/1 → 최종 2/2, 점수 0.96 |
+
+재현:
+
+```sh
+damond &            # 드라이버는 `damon prompt`를 셸로 실행합니다
+harness-bench mine --repo <small-repo> --data-dir /tmp/hb-e2e --store jsonl
+harness-bench run --repo <small-repo> --data-dir /tmp/hb-e2e --store jsonl \
+    --driver damon --damon-backend omp
+harness-bench report --data-dir /tmp/hb-e2e --store jsonl --format html
+```
+
+하네스가 worktree 안에서 `git commit`을 해도 실행은 준비 커밋 기준으로 diff를 뽑아 패치에 수집합니다.
+
+### 통합 테스트
+
+`test/integration.test.ts`는 실제 드라이버 경로를 종단으로 검증합니다. 옵트인 방식 — CI는 플래그를
+설정하지 않으므로 `npm test`에서 건너뜁니다:
+
+```sh
+HARNESS_BENCH_INTEGRATION=1 HARNESS_DAMON_BACKEND=omp npm test
+# 다른 하네스:
+HARNESS_BENCH_INTEGRATION=1 HARNESS_BENCH_INTEGRATION_DRIVER=opencode npm test
+```
 
 ### 드라이버 추가
 

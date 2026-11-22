@@ -40,6 +40,77 @@ failures:
 test result: FAILED. 2 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out
 `;
 
+const CARGO_WORKSPACE_FAIL = `
+   Compiling crate-a v0.1.0 (/ws/crate-a)
+   Compiling crate-b v0.1.0 (/ws/crate-b)
+     Running unittests src/lib.rs (target/debug/deps/crate_a-1a2b)
+
+running 3 tests
+test a_one ... ok
+test a_two ... ok
+test a_three ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running unittests src/lib.rs (target/debug/deps/crate_b-3c4d)
+
+running 3 tests
+test b_one ... ok
+test b_two ... FAILED
+test b_three ... FAILED
+
+failures:
+    b_two
+    b_three
+
+test result: FAILED. 1 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+error: test failed, to rerun pass \`-p crate-b --lib\`
+`;
+
+const CARGO_EMPTY_CRATE = `
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
+
+running 2 tests
+test a_one ... ok
+test a_two ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
+`;
+
+const CARGO_WITH_DOCTEST = `
+     Running unittests src/lib.rs (target/debug/deps/crate_a-1a2b)
+
+running 2 tests
+test a_one ... ok
+test a_two ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
+
+   Doc-tests crate-a
+
+running 1 test
+test src/lib.rs - add (line 10) ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
+`;
+
+const CARGO_COMPILE_FAIL = `
+running 3 tests
+test a_one ... ok
+test a_two ... ok
+test a_three ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
+
+   Compiling crate-b v0.1.0 (/ws/crate-b)
+error[E0308]: mismatched types
+  --> crate-b/src/lib.rs:4:18
+error: could not compile \`crate-b\` (lib test) due to 1 previous error
+`;
+
 const PYTEST_FAIL = `
 =========================== short test summary info ============================
 FAILED tests/test_math.py::test_multiplies - assert 6 == 7
@@ -82,6 +153,61 @@ describe('summarizeTestRun', () => {
     expect(summary.passed).toBe(2);
     expect(summary.failed).toBe(1);
     expect(summary.failedTests).toEqual(['math::multiplies']);
+  });
+
+  it('sums every cargo test-result line across a workspace', () => {
+    const summary = summarizeTestRun('cargo test --workspace', {
+      code: 101,
+      stdout: CARGO_WORKSPACE_FAIL,
+      stderr: '',
+      timedOut: false,
+      durationMs: 10,
+    });
+    expect(summary.countsKnown).toBe(true);
+    expect(summary.passed).toBe(4);
+    expect(summary.failed).toBe(2);
+    expect(summary.total).toBe(6);
+    expect(summary.countsUncertain).toBeUndefined();
+  });
+
+  it('ignores an empty crate result when summing the workspace', () => {
+    const summary = summarizeTestRun('cargo test', {
+      code: 0,
+      stdout: CARGO_EMPTY_CRATE,
+      stderr: '',
+      timedOut: false,
+      durationMs: 10,
+    });
+    expect(summary.passed).toBe(2);
+    expect(summary.failed).toBe(0);
+    expect(summary.total).toBe(2);
+  });
+
+  it('counts doc-tests once as their own suite, not as duplicates of unit tests', () => {
+    const summary = summarizeTestRun('cargo test', {
+      code: 0,
+      stdout: CARGO_WITH_DOCTEST,
+      stderr: '',
+      timedOut: false,
+      durationMs: 10,
+    });
+    expect(summary.passed).toBe(3);
+    expect(summary.failed).toBe(0);
+    expect(summary.total).toBe(3);
+  });
+
+  it('marks counts uncertain when the exit code fails with no recorded failures', () => {
+    const summary = summarizeTestRun('cargo test --workspace', {
+      code: 101,
+      stdout: CARGO_COMPILE_FAIL,
+      stderr: '',
+      timedOut: false,
+      durationMs: 10,
+    });
+    expect(summary.passed).toBe(3);
+    expect(summary.failed).toBe(0);
+    expect(summary.countsUncertain).toBe(true);
+    expect(summary.note).toContain('101');
   });
 
   it('parses pytest output', () => {

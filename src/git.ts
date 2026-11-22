@@ -206,11 +206,25 @@ export function commitAll(cwd: string, message: string): void {
   if (!commit.ok) throw new Error(`git commit failed: ${commit.stderr.trim()}`);
 }
 
-/** Stage everything and return the patch of the working tree against HEAD. */
-export function collectWorktreePatch(cwd: string): string {
+/**
+ * Stage everything and return the patch of the working tree against HEAD, or
+ * against `baseSha` when given. A harness that commits its own work leaves
+ * nothing uncommitted, so diffing HEAD alone would collect an empty patch;
+ * diffing the index against the prepared base captures committed and
+ * uncommitted changes alike.
+ */
+export function collectWorktreePatch(cwd: string, baseSha?: string): string {
   const add = runGit(cwd, ['add', '-A']);
   if (!add.ok) throw new Error(`git add failed: ${add.stderr.trim()}`);
-  const diff = runGit(cwd, ['diff', '--cached', '--no-color', '--no-ext-diff', '--no-textconv', '--binary']);
+  const diff = runGit(cwd, [
+    'diff',
+    '--cached',
+    ...(baseSha ? [baseSha] : []),
+    '--no-color',
+    '--no-ext-diff',
+    '--no-textconv',
+    '--binary',
+  ]);
   runGit(cwd, ['reset', '--quiet']);
   if (!diff.ok) throw new Error(`git diff failed: ${diff.stderr.trim()}`);
   return diff.stdout;

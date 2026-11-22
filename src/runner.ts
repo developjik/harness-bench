@@ -10,6 +10,7 @@ import {
   applyPatch,
   collectWorktreePatch,
   commitAll,
+  currentHead,
   removeWorktree,
   repoRoot,
 } from './git.js';
@@ -113,6 +114,7 @@ export async function runTaskWithDriver(task: MinedTask, driver: HarnessDriver, 
       }
     }
     commitAll(worktreePath, `harness-bench: prepare ${task.id} (base ${shortSha(task.baseCommit)} + tests)`);
+    const preparedHead = currentHead(worktreePath);
 
     const linked = options.linkDeps === false ? [] : linkWorktreeDependencies(repo, worktreePath);
     if (linked.length > 0) {
@@ -148,7 +150,7 @@ export async function runTaskWithDriver(task: MinedTask, driver: HarnessDriver, 
     commandLine = outcome.commandLine;
     logTo(logPath, `\n## driver ${driverLabel} exit=${outcome.exitCode} timedOut=${outcome.timedOut}\n${outcome.stdout}\n${outcome.stderr}\n`);
 
-    patch = collectWorktreePatch(worktreePath);
+    patch = collectWorktreePatch(worktreePath, preparedHead);
     logTo(logPath, `\n## patch\n${patch}\n`);
 
     options.onProgress?.(`    tests ${task.id} [${driverLabel}]`);

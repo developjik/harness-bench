@@ -169,6 +169,18 @@ describe('scoreRun', () => {
     expect(score.total).toBeLessThan(0.8);
   });
 
+  it('earns no test credit when the exit code marks the counts as uncertain', () => {
+    const score = scoreRun(task, {
+      patch: task.implPatch,
+      patchFiles: ['src/math.js'],
+      test: summary({ exitCode: 101, passed: 3, failed: 0, total: 3, passRate: 1, countsUncertain: true }),
+      baseline: summary({ exitCode: 1, passed: 0, failed: 2, total: 2, passRate: 0 }),
+    });
+    expect(score.test).toBe(0);
+    expect(score.solvedRate).toBe(0);
+    expect(score.allTestsPassed).toBe(false);
+  });
+
   it('does not credit tests that already passed on the prepared base', () => {
     const score = scoreRun(task, {
       patch: '',

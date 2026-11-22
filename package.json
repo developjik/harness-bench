@@ -1,6 +1,6 @@
 {
   "name": "@developjik/harness-bench",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Benchmark coding-agent harnesses on your own repository: mine test+impl commits, run each harness in an isolated git worktree, score the patches.",
   "keywords": [
     "benchmark",

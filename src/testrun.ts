@@ -137,13 +137,30 @@ function findCounts(text: string): Counts | null {
     return { passed, failed, skipped, total: passed + failed + skipped, known: true };
   }
 
-  // cargo: "test result: FAILED. 3 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out"
-  const cargo = /test result:\s*\w+\.\s*(\d+)\s+passed;\s*(\d+)\s+failed;\s*(\d+)\s+ignored/i.exec(text);
-  if (cargo) {
-    const passed = Number(cargo[1]);
-    const failed = Number(cargo[2]);
-    const skipped = Number(cargo[3]);
-    return { passed, failed, skipped, total: passed + failed + skipped, known: true };
+  // cargo prints one "test result: …" line per test binary — unit tests,
+  // integration tests and doc-tests each get their own — so a workspace run
+  // emits many. Every line is a distinct suite (a test belongs to exactly one
+  // binary), so all of them are summed once and nothing needs deduplication.
+  let cargoMatched = false;
+  let cargoPassed = 0;
+  let cargoFailed = 0;
+  let cargoSkipped = 0;
+  for (const match of text.matchAll(
+    /test result:\s*\w+\.\s*(\d+)\s+passed;\s*(\d+)\s+failed;\s*(\d+)\s+ignored/gi,
+  )) {
+    cargoMatched = true;
+    cargoPassed += Number(match[1]);
+    cargoFailed += Number(match[2]);
+    cargoSkipped += Number(match[3]);
+  }
+  if (cargoMatched) {
+    return {
+      passed: cargoPassed,
+      failed: cargoFailed,
+      skipped: cargoSkipped,
+      total: cargoPassed + cargoFailed + cargoSkipped,
+      known: true,
+    };
   }
 
   // Lines that look like a suite summary, newest last (some runners print per-file summaries too).
@@ -248,6 +265,10 @@ export function summarizeTestRun(command: string, result: CommandResult): TestSu
   if (counts) {
     const total = Math.max(counts.total, counts.passed + counts.failed);
     const passRate = total === 0 ? (result.code === 0 ? 1 : 0) : counts.passed / total;
+    // A failing exit code with zero recorded failures means part of the suite
+    // left no summary — a crate that failed to compile, a binary that aborted —
+    // so the parsed counts cannot explain the failure and understate the run.
+    const countsUncertain = result.code !== null && result.code !== 0 && counts.failed === 0;
     return {
       ...base,
       passed: counts.passed,
@@ -257,6 +278,12 @@ export function summarizeTestRun(command: string, result: CommandResult): TestSu
       passRate,
       failedTests,
       countsKnown: true,
+      ...(countsUncertain
+        ? {
+            countsUncertain: true,
+            note: `exit code ${result.code} with no recorded test failures — counts may be incomplete`,
+          }
+        : {}),
     };
   }
 

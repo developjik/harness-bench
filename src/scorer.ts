@@ -50,12 +50,16 @@ export function scoreRun(task: MinedTask, input: ScoreInput): Score {
   const similarity = input.patch.trim().length === 0 ? 0 : lineSimilarity(input.patch, task.implPatch);
   const diffScore = 0.5 * overlap.f1 + 0.5 * similarity;
 
-  const testScore = clamp01(input.test.passRate);
+  // Uncertain counts (failing exit code, zero recorded failures) mean part of
+  // the suite produced no summary — scoring the measured pass rate would read
+  // an incomplete run as a clean pass.
+  const testScore = input.test.countsUncertain ? 0 : clamp01(input.test.passRate);
   // Credit comes from the tests the harness actually fixed: the prepared base
   // already has the new tests failing, so a no-op run must not earn test points
   // for tests that were green before the harness touched anything.
-  const solvedRate =
-    input.baseline && input.baseline.ran
+  const solvedRate = input.test.countsUncertain
+    ? 0
+    : input.baseline && input.baseline.ran
       ? clamp01((input.test.passed - input.baseline.passed) / Math.max(1, input.baseline.failed))
       : testScore;
   const allTestsPassed = input.test.ran && input.test.exitCode === 0 && input.test.failed === 0;

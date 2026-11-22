@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { diffCommits, listCommits, parseCommitLog, repoRoot } from '../src/git.js';
-import { buildFixtureRepo } from './helpers.js';
+import { collectWorktreePatch, commitAll, currentHead, diffCommits, listCommits, parseCommitLog, repoRoot } from '../src/git.js';
+import { buildFixtureRepo, createTempRepo } from './helpers.js';
 
 describe('listCommits', () => {
   it('reads commits newest first with their changed files', () => {
@@ -46,6 +46,42 @@ describe('parseCommitLog', () => {
       { status: 'A', path: 'test/a.test.ts' },
       { status: 'R100', path: 'src/name.ts' },
     ]);
+  });
+});
+
+describe('collectWorktreePatch', () => {
+  it('collects changes a harness committed itself when given the prepared base', () => {
+    const repo = createTempRepo();
+    try {
+      repo.write('src/app.js', 'export const a = 1;\n');
+      repo.commit('chore: seed');
+      commitAll(repo.dir, 'harness-bench: prepare fixture');
+      const prepared = currentHead(repo.dir);
+
+      // A harness that runs `git commit` leaves nothing uncommitted.
+      repo.write('src/app.js', 'export const a = 1;\nexport const b = 2;\n');
+      repo.commit('agent work');
+      repo.write('scratch.txt', 'not yet committed\n');
+
+      const patch = collectWorktreePatch(repo.dir, prepared);
+      expect(patch).toContain('export const b');
+      expect(patch).toContain('scratch.txt');
+    } finally {
+      repo.cleanup();
+    }
+  });
+
+  it('still returns the uncommitted diff when no base is given', () => {
+    const repo = createTempRepo();
+    try {
+      repo.write('src/app.js', 'export const a = 1;\n');
+      repo.commit('chore: seed');
+      repo.write('src/app.js', 'export const a = 1;\nexport const b = 2;\n');
+      const patch = collectWorktreePatch(repo.dir);
+      expect(patch).toContain('export const b');
+    } finally {
+      repo.cleanup();
+    }
   });
 });
 
