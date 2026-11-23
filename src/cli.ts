@@ -233,7 +233,7 @@ EXAMPLES
   harness-bench run --repo . --driver mock --dry-run
   harness-bench run --repo . --driver claude-code,codex --timeout 900
   harness-bench report --format html
-  npx harness-bench mine --repo ~/code/my-app --test-cmd "npm test --silent"
+  npx -y @developjik/harness-bench mine --repo ~/code/my-app --test-cmd "npm test --silent"
 
 HOW A RUN WORKS
   1. A worktree is created at the commit before the mined change.

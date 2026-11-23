@@ -60,6 +60,8 @@ describe('main', () => {
     expect(code).toBe(0);
     expect(out.join('')).toContain('harness-bench');
     expect(out.join('')).toContain('mine');
+    expect(out.join('')).toContain('npx -y @developjik/harness-bench mine');
+    expect(out.join('')).not.toMatch(/npx (-y )?harness-bench\b/);
   });
 
   it('returns 2 for unknown commands', async () => {
