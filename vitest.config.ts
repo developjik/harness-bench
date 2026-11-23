@@ -10,5 +10,8 @@ export default defineConfig({
     hookTimeout: 60_000,
     pool: 'forks',
     reporters: 'default',
+    coverage: {
+      include: ['src/**/*.ts', 'bin/**/*.ts'],
+    },
   },
 });
