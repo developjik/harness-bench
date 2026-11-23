@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Executable entry point. `realpathSync` resolves the symlink npm installs into
- * node_modules/.bin, so `npx harness-bench` and a global install both work.
+ * node_modules/.bin, so `npx @developjik/harness-bench` and a global install both work.
  */
 import { realpathSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';

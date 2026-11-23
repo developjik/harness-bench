@@ -11,3 +11,4 @@
 - Opt-in integration test `test/integration.test.ts` for real harness runs (`HARNESS_BENCH_INTEGRATION=1`; driver via `HARNESS_BENCH_INTEGRATION_DRIVER`, damon backend via `HARNESS_DAMON_BACKEND`); CI skips it (DEV-24).
 - Failure-path tests for cli drivers and `spawnProcess` (missing binary, timeout, failing test command) (DEV-24).
 - "Verified harnesses" table and reproduction steps in the README (DEV-24), and an npm install warning for the `@developjik/harness-bench` scope (DEV-36).
+- `--help` example now runs `npx -y @developjik/harness-bench` instead of the unscoped name, which resolves to a different npm package (DEV-36).
