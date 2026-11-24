@@ -6,12 +6,14 @@ import { join, resolve, dirname } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import Database from 'better-sqlite3';
+import { safeSelectionPath, assertFullSelectionClone } from '../dist/src/selection-safety.js';
 const [repoArg, companionArg, outArg] = process.argv.slice(2);
 if (!repoArg || !companionArg || !outArg) throw new Error('usage: node scripts/export-selection-graph.mjs <clean-repo> <trusted-built-sqlite-graph-checkout> <new-output.json>');
 const repo = resolve(repoArg), companion = resolve(companionArg);
 const git = (cwd, ...args) => { const r = spawnSync('git', args, {cwd, encoding:'utf8', timeout:120000, maxBuffer:32*1024*1024, env:{...process.env,GIT_TERMINAL_PROMPT:'0',GIT_PAGER:'cat'}});if(r.status!==0)throw new Error('git read failed');return r.stdout; };
 for (const dir of [repo, companion]) if (git(dir,'status','--porcelain','--untracked-files=normal').trim()) throw new Error('both checkouts must be clean');
-if (spawnSync('git',['config','--get-regexp','^remote\\..*\\.promisor$'],{cwd:repo,encoding:'utf8'}).stdout.trim()) throw new Error('export requires a full clone, not a partial/promisor clone');
+assertFullSelectionClone(repo);
+assertFullSelectionClone(companion);
 const commit = git(repo,'rev-parse','HEAD').trim(), producerCommit=git(companion,'rev-parse','HEAD').trim();
 const temp=mkdtempSync(join(tmpdir(),'selection-graph-'));
 try {
@@ -19,7 +21,13 @@ try {
  // Index only committed regular blobs, never ignored local files or symlinks.
  for(const row of git(repo,'ls-tree','-rz','--full-tree',commit).split('\0')) {
   const m=/^(100644|100755) blob ([a-f0-9]{40})\t([\s\S]+)$/.exec(row);if(!m)continue;
-  const rel=m[3];if(rel.startsWith('/')||rel.split('/').some(s=>s==='..'||s==='.'||!s))throw new Error('unsafe git path');
+  const rel=m[3];
+  // Match source/doc/manifest/config inputs, do not read unrelated large binaries.
+  if(!/\.(?:[cm]?[jt]sx?|md|mdx|markdown|json)$/i.test(rel))continue;
+  if(!safeSelectionPath(rel))throw new Error('unsafe git path');
+  const size=Number(git(repo,'cat-file','-s',m[2]).trim());
+  if(!Number.isSafeInteger(size)||size<0)throw new Error('invalid blob size');
+  if(size>512*1024)continue;
   const content=spawnSync('git',['cat-file','blob',m[2]],{cwd:repo,timeout:30000,maxBuffer:16*1024*1024,env:{...process.env,GIT_NO_LAZY_FETCH:'1',GIT_TERMINAL_PROMPT:'0'}});
   if(content.status!==0)throw new Error('missing or oversized local blob');
   const destination=join(source,rel);mkdirSync(dirname(destination),{recursive:true});writeFileSync(destination,content.stdout);

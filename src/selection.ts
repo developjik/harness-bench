@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { readFileSync, statSync } from 'node:fs';
 import { posix } from 'node:path';
 import { gitOrThrow } from './git.js';
+import { safeSelectionPath as safePath } from './selection-safety.js';
 import type { MinedTask } from './types.js';
 
 export const SELECTION_VERSION = 'graph-selection-v1';
@@ -14,7 +15,7 @@ export interface SelectionGraph {
   edges: Array<[string, string]>;
 }
 const sha = /^[a-f0-9]{40}$/;
-const safePath = (s: unknown): s is string => typeof s === 'string' && s.length > 0 && s.length < 4096 && !s.includes('\\') && !/[\x00-\x1f]/.test(s) && !s.startsWith('/') && !s.split('/').some(p => p === '..' || p === '.' || p === '');
+
 
 /** Strict transport validation, then bind every graph file to the repository commit. */
 export function readSelectionGraph(file: string, repo: string, head: string): SelectionGraph {
