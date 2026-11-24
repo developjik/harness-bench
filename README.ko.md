@@ -219,3 +219,7 @@ damon prompt "<과제 프롬프트>" --backend claude
 ## 라이선스
 
 MIT © Jeong Ingwon (developjik)
+
+### Regression identity checks (DEV-132)
+
+회귀 비교는 같은 테스트 명령과 러너의 완전한 테스트 ID를 우선합니다. Vitest의 파일+테스트 경로와 pytest node ID를 지원합니다. 파일 오류, 다른 러너, 잘린 출력, 미지원 러너 또는 과거 기록처럼 ID가 불완전하면 실패 수가 같거나 줄어도 `unknown`으로 표시하며 회귀 없음 점수 0.1을 주지 않습니다. 실패 수 증가의 집계 fallback은 유지합니다. 저장된 결과는 rescore 후 새 판정이 반영됩니다.
