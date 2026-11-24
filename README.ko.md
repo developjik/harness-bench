@@ -231,3 +231,14 @@ MIT © Jeong Ingwon (developjik)
 ## 개발 기준선 (DEV-128)
 
 개발과 CI는 Node.js 22.12.0(`.nvmrc`) 이상을 사용합니다. Vitest 5.1.1의 공식 지원 범위에는 Node 20.19가 없습니다. 실행이 된다는 이유로 공식 지원이라고 부르지 않습니다. 패키지 사용자의 기존 engines는 유지합니다. Node 20 지원 패키지는 테스트 러너 없이 빌드한 tarball의 운영 의존성만 설치하고 CLI/import를 별도로 검사합니다. 개발 TypeScript 기준은 7.0.2입니다.
+
+## 실험 옵션: 그래프 가중 과제 선정
+
+`select`는 같은 후보군·선정 개수에서 기존 최신순과 그래프 가중 선정을 비교합니다. 고정 seed, 그래프·후보 해시, 파일별 연결도·변경 빈도와 선정 확률, 모듈 분포·파일 중복을 JSON으로 남깁니다. 실제 하네스나 테스트 명령은 실행하지 않으며 기존 `mine`/`run` 기본값도 바꾸지 않습니다.
+
+```sh
+node scripts/export-selection-graph.mjs /path/to/clean-repo /path/to/trusted-built-sqlite-graph-mcp /tmp/graph.json
+node dist/bin/cli.js select --repo /path/to/clean-repo --graph-snapshot /tmp/graph.json --count 3 --seed 42 --out /tmp/comparison.json
+```
+
+고정 커밋의 실제 저장소 이력으로 실행한 오프라인 실험에서는 기존 방식보다 모듈 수가 줄고 파일 중복이 늘었습니다. 개선이나 실제 하네스 성능 우위가 입증된 것이 아닙니다. [방법·부정적 결과·정확한 재현 절차](examples/graph-selection/README.md)를 함께 확인하세요. exporter는 명시한 신뢰된 빌드의 코드를 실행하므로 경로를 직접 검토해야 합니다. 공개 배포나 외부 서비스는 필요하지 않습니다.
