@@ -23,9 +23,9 @@ export function assessRegressions(baseline: TestSummary | undefined, final: Test
     regressions: [],
     note,
   });
-  if (!final.ran || final.timedOut || final.countsUncertain) return unknown('final test run is incomplete');
+  if (!completedTestRun(final)) return unknown('final test run is incomplete');
   if (final.exitCode === 0 && final.failed === 0) return { status: 'none', regressions: [] };
-  if (!baseline?.ran || baseline.timedOut || baseline.countsUncertain) return unknown('no reliable baseline');
+  if (!baseline || !completedTestRun(baseline)) return unknown('no reliable baseline');
   const a = baseline.failureIdentity,
     b = final.failureIdentity;
   if (
@@ -62,6 +62,11 @@ export function detectRegressions(baseline: TestSummary | undefined, final: Test
   return result.status === 'unknown' ? [`(regression unknown: ${result.note})`] : result.regressions;
 }
 
+/** Parsed partial counts remain diagnostics, never evidence of a completed run. */
+function completedTestRun(test: TestSummary): boolean {
+  return test.ran && !test.timedOut && test.exitCode !== null && !test.countsUncertain;
+}
+
 export interface ScoreInput {
   patch: string;
   patchFiles: string[];
@@ -81,16 +86,19 @@ export function scoreRun(task: MinedTask, input: ScoreInput): Score {
   // Uncertain counts (failing exit code, zero recorded failures) mean part of
   // the suite produced no summary — scoring the measured pass rate would read
   // an incomplete run as a clean pass.
-  const testScore = input.test.countsUncertain ? 0 : clamp01(input.test.passRate);
+  const finalComplete = completedTestRun(input.test);
+  const testScore = finalComplete ? clamp01(input.test.passRate) : 0;
   // Credit comes from the tests the harness actually fixed: the prepared base
   // already has the new tests failing, so a no-op run must not earn test points
   // for tests that were green before the harness touched anything.
-  const solvedRate = input.test.countsUncertain
+  const solvedRate = !finalComplete
     ? 0
-    : input.baseline && input.baseline.ran
-      ? clamp01((input.test.passed - input.baseline.passed) / Math.max(1, input.baseline.failed))
+    : input.baseline
+      ? completedTestRun(input.baseline)
+        ? clamp01((input.test.passed - input.baseline.passed) / Math.max(1, input.baseline.failed))
+        : 0
       : testScore;
-  const allTestsPassed = input.test.ran && input.test.exitCode === 0 && input.test.failed === 0;
+  const allTestsPassed = finalComplete && input.test.exitCode === 0 && input.test.failed === 0;
   const assessment = assessRegressions(input.baseline, input.test);
   const regressions = assessment.regressions;
   const regressionFree = assessment.status === 'none';
