@@ -36,6 +36,7 @@ prompt (the commit message plus the rules), the test command and the gold diff s
 ```sh
 git clone https://github.com/developjik/harness-bench
 cd harness-bench
+nvm install
 nvm use
 npm ci
 npm run build
