@@ -5,6 +5,7 @@ import { isAbsolute, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { ALL_DRIVER_IDS, createDrivers, parseMockMode, whichBinary } from './drivers/index.js';
 import { mineTasks } from './miner.js';
+import { compareSelections, readSelectionGraph } from './selection.js';
 import { renderHtml, renderJson, renderTerminal, summarizeMeta, writeHtmlReport } from './report.js';
 import { runMatrix } from './runner.js';
 import {
@@ -65,6 +66,9 @@ const VALUE_FLAGS = new Set([
   'out',
   'damon-backend',
   'prompt-template',
+  'graph-snapshot',
+  'seed',
+  'count',
 ]);
 
 const BOOLEAN_FLAGS = new Set([
@@ -190,6 +194,7 @@ COMMANDS
   report    Print the score matrix, or write a static HTML report
   list      List mined tasks
   doctor    Show which harness binaries are available
+  select    Compare offline graph-weighted selection against existing mine order
 
 GLOBAL OPTIONS
   --help, -h              Show this help
@@ -207,6 +212,16 @@ mine OPTIONS
   --max-diff-lines <n>    Skip commits larger than this many changed lines (default: 1200)
   --store <sqlite|jsonl>  Task store backend (default: sqlite)
   --dry-run               Show what would be mined without writing anything
+
+select OPTIONS (experimental, offline, no drivers)
+  --repo <path>           Clean repository matching the graph snapshot HEAD
+  --graph-snapshot <json> Snapshot from scripts/export-selection-graph.mjs
+  --limit <n>             Same commit scan limit as mine (default: 200)
+  --max-tasks <n>         Fixed candidate pool bound (default: 25)
+  --count <n>             Tasks selected by each method (default: 5)
+  --seed <uint32>         Weighted sampling seed (default: 1)
+  --out <json>            Write full comparison JSON (otherwise stdout)
+  --test-cmd <command>    Mining metadata only; this command never executes it
 
 run OPTIONS
   --repo <path>           Repository that holds the mined commits (default: .)
@@ -328,6 +343,30 @@ async function commandMine(parsed: ParsedArgs, io: CliIo): Promise<number> {
   if (!wantsJson(parsed)) {
     io.out(`Stored ${report.tasks.length} task(s) in ${storePath} (${storeKind}) — ${saved.inserted} new, ${saved.updated} updated.\n`);
   }
+  return 0;
+}
+
+async function commandSelect(parsed: ParsedArgs, io: CliIo): Promise<number> {
+  const repo = resolveRepo(parsed);
+  const file = last(parsed, 'graph-snapshot');
+  if (!file) throw new UsageError('--graph-snapshot is required');
+  const { gitOrThrow } = await import('./git.js');
+  if (gitOrThrow(repo, ['status', '--porcelain', '--untracked-files=normal']).trim()) throw new UsageError('select requires a clean checkout');
+  const head = gitOrThrow(repo, ['rev-parse', 'HEAD']).trim();
+  const graph = readSelectionGraph(resolve(file), repo, head);
+  const pool = mineTasks({ repo, limit: numberFlag(parsed, 'limit', 200), maxTasks: numberFlag(parsed, 'max-tasks', 25), testCommand: last(parsed, 'test-cmd'), maxDiffLines: numberFlag(parsed, 'max-diff-lines', 1200), since: last(parsed, 'since') });
+  const rawSeed = last(parsed, 'seed') ?? '1';
+  if (!/^\d+$/.test(rawSeed)) throw new UsageError('--seed must be uint32');
+  const result = compareSelections(pool.tasks, graph, numberFlag(parsed, 'count', 5), Number(rawSeed));
+  if (gitOrThrow(repo, ['rev-parse', 'HEAD']).trim() !== head || gitOrThrow(repo, ['status', '--porcelain', '--untracked-files=normal']).trim()) throw new UsageError('checkout changed during selection');
+  const json = JSON.stringify(result, null, 2) + '\n';
+  const out = last(parsed, 'out');
+  if (out) {
+    const { writeFileSync } = await import('node:fs');
+    // Exclusive create avoids clobbering a snapshot or source file.
+    writeFileSync(resolve(out), json, { flag: 'wx' });
+    io.out(resolve(out) + '\n');
+  } else io.out(json);
   return 0;
 }
 
@@ -533,6 +572,8 @@ export async function main(argv: string[] = process.argv.slice(2), io: CliIo = d
         return commandReport(parsed, io);
       case 'list':
         return commandList(parsed, io);
+      case 'select':
+        return await commandSelect(parsed, io);
       case 'doctor':
         return await commandDoctor(parsed, io);
       default:
