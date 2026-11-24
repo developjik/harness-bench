@@ -251,3 +251,7 @@ node dist/bin/cli.js select --repo /path/to/clean-repo --graph-snapshot /tmp/gra
 ```
 
 The pinned offline experiment selected fewer modules and more overlapping files than the baseline. It does **not** establish an improvement or any real harness performance result. See [the method, negative result and exact replay](examples/graph-selection/README.md). No package release or external service is needed.
+
+### Incomplete test runs
+
+A timed-out, unexecuted, null-exit (signal/spawn failure), or uncertain-count final test run earns zero `test` and `solvedRate` credit and cannot be `allTestsPassed`. Parsed partial counts and `passRate` remain in the raw test summary for diagnosis only. If a supplied baseline is incomplete, `solvedRate` is zero because its failed-test denominator is not reliable; a completed final run still reports its observed `test` pass rate. With no baseline, the existing final-pass-rate fallback remains. Completed passing and failing runs keep the existing weights and rules. This does not erase independent patch-similarity credit. Stored scores are unchanged until `rescore` is called.
