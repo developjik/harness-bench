@@ -65,7 +65,7 @@ failures:
 
 test result: FAILED. 1 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
 
-error: test failed, to rerun pass `-p crate-b --lib`
+error: test failed, to rerun pass \`-p crate-b --lib\`
 `;
 
 const CARGO_EMPTY_CRATE = `
@@ -108,7 +108,7 @@ test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
    Compiling crate-b v0.1.0 (/ws/crate-b)
 error[E0308]: mismatched types
   --> crate-b/src/lib.rs:4:18
-error: could not compile `crate-b` (lib test) due to 1 previous error
+error: could not compile \`crate-b\` (lib test) due to 1 previous error
 `;
 
 const PYTEST_FAIL = `
