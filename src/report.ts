@@ -150,7 +150,7 @@ export function renderTerminal(results: RunResult[], meta: ReportMeta, options: 
       const labels: string[] = [];
       if (result.error) labels.push(`error: ${result.error}`);
       if (result.score && !result.score.regressionFree) {
-        labels.push(`regressions: ${result.score.regressions.join('; ')}`);
+        labels.push(result.score.regressionStatus === 'unknown' ? `regressions unknown: ${result.score.regressionNote}` : `regressions: ${result.score.regressions.join('; ')}`);
       }
       if (result.testFilesTouched.length > 0) labels.push(`edited tests: ${result.testFilesTouched.join(', ')}`);
       lines.push(`  ${result.taskId} × ${result.driver} — ${labels.join(' | ')}`);
@@ -226,6 +226,7 @@ export function renderHtml(results: RunResult[], meta: ReportMeta, options: Html
       const notes: string[] = [];
       if (result.driverNote) notes.push(result.driverNote);
       if (result.error) notes.push(`error: ${result.error}`);
+      if (score?.regressionStatus === 'unknown') notes.push(`regressions unknown: ${score.regressionNote}`);
       if (score && score.regressions.length > 0) notes.push(`regressions: ${score.regressions.join('; ')}`);
       if (result.testFilesTouched.length > 0) notes.push(`edited tests: ${result.testFilesTouched.join(', ')}`);
       if (result.timedOut) notes.push('timeout');
@@ -235,7 +236,7 @@ export function renderHtml(results: RunResult[], meta: ReportMeta, options: Html
         <td class="num strong">${score ? score.total.toFixed(2) : '—'}</td>
         <td class="num">${score ? score.solvedRate.toFixed(2) : '—'}</td>
         <td class="num">${score ? score.diff.toFixed(2) : '—'}</td>
-        <td class="num">${score ? (score.regressionFree ? 'yes' : 'no') : '—'}</td>
+        <td class="num">${score ? (score.regressionStatus === 'unknown' ? 'unknown' : score.regressionFree ? 'yes' : 'no') : '—'}</td>
         <td class="num">${escapeHtml(testsLabel(result))}</td>
         <td class="num">${result.baseline?.ran ? `${result.baseline.passed}/${result.baseline.total}` : '—'}</td>
         <td class="num">${result.filesTouched}</td>
