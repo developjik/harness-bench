@@ -73,7 +73,11 @@ describe('pipeline: mine → worktree run → score → report', () => {
       expect(result.test.failed).toBeGreaterThan(0);
       expect(result.score?.total).toBeGreaterThan(0.2);
       expect(result.score?.total).toBeLessThan(0.95);
-      expect(result.score?.regressionFree).toBe(true);
+      expect(result.score?.regressionStatus).toBe('unknown');
+      expect(result.score?.regressionFree).toBe(false);
+      const meta = summarizeMeta([result], {dataDir:'.',tasks:1,version:'test'});
+      expect(renderTerminal([result], meta, {color:false})).toContain('regressions unknown:');
+      expect(renderHtml([result], meta)).toContain('unknown');
     },
     180_000,
   );
