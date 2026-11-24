@@ -5,6 +5,7 @@ import { compareSelections, readSelectionGraph, digest, seededRandom, type Selec
 import { main } from '../src/cli.js';
 import { buildFixtureRepo, createTempDir } from './helpers.js';
 import { mineTasks } from '../src/miner.js';
+import { safeSelectionPath, assertFullSelectionClone } from '../src/selection-safety.js';
 import { gitOrThrow } from '../src/git.js';
 import type { MinedTask } from '../src/types.js';
 const graph: SelectionGraph={version:1,producer:{name:'sqlite-graph-mcp',commit:'a'.repeat(40),engine:'heuristic'},commit:'b'.repeat(40),files:[{path:'src/a.ts',blob:'c'.repeat(40)},{path:'lib/b.ts',blob:'d'.repeat(40)}],edges:[['lib/b.ts','src/a.ts']]};
@@ -69,4 +70,12 @@ describe('graph binding and CLI',()=>{
 
 it('rejects partial clones before historical object reads',async()=>{
  const f=buildFixtureRepo();try{gitOrThrow(f.repo.dir,['config','remote.origin.promisor','true']);const err:string[]=[];expect(await main(['select','--repo',f.repo.dir,'--graph-snapshot','missing'],{out:()=>{},err:s=>err.push(s)})).toBe(2);expect(err.join('')).toContain('full clone');}finally{f.repo.cleanup();}
+});
+
+it('portable paths reject Windows traversal, drive, stream and device forms',()=>{
+ for(const p of ['..\\escape','folder/..\\escape','C:/outside','file:stream','folder/NUL.txt','folder/x.','folder/x '])expect(safeSelectionPath(p)).toBe(false);
+ expect(safeSelectionPath('src/valid.ts')).toBe(true);
+});
+it('accepts explicit false promisor and rejects legacy partial clone',()=>{
+ const f=buildFixtureRepo();try{gitOrThrow(f.repo.dir,['config','remote.origin.promisor','false']);expect(()=>assertFullSelectionClone(f.repo.dir)).not.toThrow();gitOrThrow(f.repo.dir,['config','extensions.partialClone','origin']);expect(()=>assertFullSelectionClone(f.repo.dir)).toThrow(/full clone/);}finally{f.repo.cleanup();}
 });
