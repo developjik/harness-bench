@@ -31,7 +31,7 @@ node dist/bin/cli.js select --repo /tmp/sqlite-graph-71 --graph-snapshot /tmp/se
 node scripts/check-selection-replay.mjs /tmp/selection-result.json
 ```
 
-Outputs must not already exist. `--out` uses exclusive create to avoid overwriting source files or the graph snapshot. Both checkout trees must be clean. The exporter indexes into a throwaway database, not the user's existing graph, and removes only that temporary directory afterward. No network is used by selection/export; clone/install above require network.
+Outputs must not already exist. `--out` uses exclusive create to avoid overwriting source files or the graph snapshot. Both checkout trees must be clean. The exporter materializes only regular blobs from the pinned commit into a throwaway directory, excluding ignored local files and symlinks. It indexes into a throwaway database, not the user's existing graph, and removes only that temporary directory afterward. Partial/promisor clones are rejected before historical object reads. Candidate hashes use reference commits and implementation paths, not configurable Git patch display strings. No network is used by selection/export; clone/install above require network.
 
 The CI job builds the pinned graph producer, exports it and checks the exact report against `experiment.json`. To use another repository, keep its graph snapshot and comparison report together; choose `--count` no greater than the eligible candidate pool. A sparse candidate pool is an error, not a silently smaller comparison. Add `--test-cmd` if the miner cannot infer metadata, but no command is executed by `select`.
 
