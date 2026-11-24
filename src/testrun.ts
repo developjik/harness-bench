@@ -318,14 +318,26 @@ function failureIdentity(text: string, failed: number | undefined, complete: boo
   if (/Test Files/.test(text)) {
     runner = 'vitest';
     ids = [...text.matchAll(/^\s*FAIL\s+(.+?)\s+>\s+(.+)$/gm)].map((m) => `${m[1]?.trim()} > ${m[2]?.trim()}`);
-    executionErrors = /^\s*FAIL\s+(?!.*\s>\s).+$/m.test(text) || /Unhandled (?:Error|Rejection)|\d+ (?:unhandled )?errors?/i.test(text);
+    executionErrors = /^\s*FAIL\s+(?!.*\s>\s).+$/m.test(text) || /^\s*(?:⎯+\s*)?Unhandled (?:Errors?|Rejections?)\s*(?:⎯+)?\s*$|^\s*Errors\s+[1-9]\d*\s+errors?\s*$/im.test(text);
   } else if (/short test summary info|=+.*(?:failed|passed).*in \d/.test(text)) {
     runner = 'pytest';
-    ids = [...text.matchAll(/^FAILED\s+(.+?)(?:\s+-\s+.*)?$/gm)].map((m) => m[1]!.trim());
-    executionErrors = /^ERROR\s|\b[1-9]\d* errors?\b/m.test(text);
-    // A pytest parameter ID can itself contain the summary delimiter. Without
-    // structured output those lines cannot safely be split into ID and error.
-    if (ids.some(id => !id.includes('::') || (id.includes('[') && !id.endsWith(']')))) complete = false;
+    for (const match of text.matchAll(/^FAILED\s+(.+)$/gm)) {
+      const line = match[1]!;
+      // Multiple/nested brackets are ambiguous in pytest's human-readable summary.
+      if ((line.match(/\[/g)?.length ?? 0) > 1 || (line.match(/\]/g)?.length ?? 0) > 1) complete = false;
+      let depth = 0;
+      let end = line.length;
+      for (let i = 0; i < line.length; i++) {
+        if (line[i] === '[') { if (depth) complete = false; depth++; }
+        if (line[i] === ']') { depth--; if (depth < 0) complete = false; }
+        if (line.slice(i, i + 3) === ' - ' && depth === 0) { end = i; break; }
+      }
+      if (depth !== 0) complete = false;
+      const id = line.slice(0, end).trim();
+      if (!id.includes('::')) complete = false;
+      ids.push(id);
+    }
+    executionErrors = /^ERROR\s|^=+.*(?:,|\s)[1-9]\d* errors?(?:,|\s|=)/m.test(text);
   }
   if (!runner) return undefined;
   ids = [...new Set(ids)];
