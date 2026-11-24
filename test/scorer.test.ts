@@ -34,14 +34,31 @@ function summary(overrides: Partial<TestSummary> = {}): TestSummary {
 
 function sampleTask(id:string):MinedTask {return {id,implFiles:[],implPatch:''} as unknown as MinedTask;}
 describe('regression identity comparison',()=>{
+  it('marks nested pytest parameter brackets unknown rather than granting clean credit',()=>{
+    const run=summarizeTestRun('pytest',{stdout:'FAILED tests/a.py::test_x[case] - A] - error\n=== 1 failed in 0.1s ===',stderr:'',code:1,timedOut:false,durationMs:1});
+    // Plain text with extra closing brackets in the suffix cannot be authenticated as a complete ID.
+    const other=summarizeTestRun('pytest',{stdout:'FAILED tests/a.py::test_x[[case] - B] - error\n=== 1 failed in 0.1s ===',stderr:'',code:1,timedOut:false,durationMs:1});
+    expect(run.failureIdentity?.complete).toBe(false);
+    expect(other.failureIdentity?.complete).toBe(false);
+    expect(assessRegressions(run,other).status).toBe('unknown');
+  });
+  it.each([
+    ' FAIL src/a.test.ts > Unhandled Error case\n Test Files 1 failed (1)\n Tests 1 failed (1)',
+    'FAILED tests/a.py::A - assertion 1 error in message\n=== 1 failed in 0.1s ==='
+  ])('does not mistake case names or assertion messages for execution errors',stdout=>{
+    const run=summarizeTestRun('test',{stdout,stderr:'',code:1,timedOut:false,durationMs:1});
+    expect(run.failureIdentity?.complete).toBe(true);
+    expect(assessRegressions(run,run).status).toBe('none');
+  });
+
   const parseOutput=(stdout:string)=>summarizeTestRun('test',{stdout,stderr:'',code:1,timedOut:false,durationMs:1});
   it('preserves spaces in pytest parameter IDs',()=>{
     const a=parseOutput('FAILED tests/test_a.py::test_x[case A] - assert false\n=== 1 failed, 2 passed in 0.12s ===');
     const b=parseOutput('FAILED tests/test_a.py::test_x[case B] - assert false\n=== 1 failed, 2 passed in 0.12s ===');
     expect(assessRegressions(a,b)).toMatchObject({status:'detected',regressions:['tests/test_a.py::test_x[case B]']});
   });
-  it('does not claim complete pytest IDs with ambiguous summary delimiters',()=>{
-    expect(parseOutput('FAILED tests/test_a.py::test_x[case - B] - assertion\n=== 1 failed in 0.12s ===').failureIdentity?.complete).toBe(false);
+  it('preserves summary delimiters inside balanced pytest parameter IDs',()=>{
+    expect(parseOutput('FAILED tests/test_a.py::test_x[case - B] - assertion\n=== 1 failed in 0.12s ===').failureIdentity?.complete).toBe(true);
   });
   it.each([
     ' FAIL src/a.test.ts > suite > A\n FAIL src/b.test.ts\n Test Files 2 failed (2)\n Tests 1 failed (1)',
