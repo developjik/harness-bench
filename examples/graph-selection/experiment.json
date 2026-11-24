@@ -1,0 +1,1018 @@
+{
+  "version": "graph-selection-v1",
+  "seed": 42,
+  "count": 3,
+  "candidateCount": 6,
+  "candidateHash": "f9d04ccbbf5273d1799104a372767a9a0d40373f9f97bf1edfb1941169683da0",
+  "graphHash": "8edc84cbb61ed9afb5c48bcf96368a4f3f4eec1e122ca0640878a088ecd55180",
+  "graph": {
+    "version": 1,
+    "producer": {
+      "name": "sqlite-graph-mcp",
+      "commit": "62335697d412dcdf6cbb41567e1e37bc224212d6",
+      "engine": "heuristic"
+    },
+    "commit": "62335697d412dcdf6cbb41567e1e37bc224212d6",
+    "files": [
+      {
+        "path": "CHANGELOG.md",
+        "blob": "a768a3dd1db5b8479f5d0b3c95f3b5f11df93b7d"
+      },
+      {
+        "path": "README.ko.md",
+        "blob": "169b0a2b28fa267250b5f64bbb9e265dac1ea399"
+      },
+      {
+        "path": "README.md",
+        "blob": "9e23d2f5773b03730d5e6fa16ab2effbb166e9da"
+      },
+      {
+        "path": "SECURITY.md",
+        "blob": "85a512ef631e3dba329ed9512e0204e03bfce8c2"
+      },
+      {
+        "path": "bin/cli.ts",
+        "blob": "e8ed2cfa66d28569e3ade3a482d6ecf9368ad5ae"
+      },
+      {
+        "path": "package.json",
+        "blob": "65777f3a052c5176c39382d476fb09c714ec430d"
+      },
+      {
+        "path": "scripts/check-version-sync.mjs",
+        "blob": "64958dc2a70599d35df6dac169e0a1b8c83f58d6"
+      },
+      {
+        "path": "scripts/runtime-smoke.mjs",
+        "blob": "2fa045bb09356122ab74e8cb4f4c6d27eb380221"
+      },
+      {
+        "path": "src/ast.ts",
+        "blob": "6faf4e8b8195cceee2f08355caa63ef26d4c525a"
+      },
+      {
+        "path": "src/db.ts",
+        "blob": "55f6fa135932ebd04fe5de57e8c69bfb6b43e5ef"
+      },
+      {
+        "path": "src/diff.ts",
+        "blob": "2e301a00bd50f9cdf34c3779f2f8ddf5770eb35f"
+      },
+      {
+        "path": "src/index.ts",
+        "blob": "c4e59ec3fc0fee64e1f07330ed8a05c4a9f0a399"
+      },
+      {
+        "path": "src/indexer.ts",
+        "blob": "9dda9d82dec0ce81ae4c1ac3f5ac8c5cc5e29fee"
+      },
+      {
+        "path": "src/mcp.ts",
+        "blob": "710be0d7d84409053e43417c75022cb3efaf361c"
+      },
+      {
+        "path": "src/plan.ts",
+        "blob": "ee797936f713deb0adb6f002e6363f50f5d57966"
+      },
+      {
+        "path": "src/query.ts",
+        "blob": "db73ce7d5f18bccadeb6fc44800e0e68379339c3"
+      },
+      {
+        "path": "src/types.ts",
+        "blob": "3b29388b650d973c0465930b400370389aadc6d6"
+      },
+      {
+        "path": "src/util.ts",
+        "blob": "00ddd8de1c3fce92ea99bfc7a2427d11889f418a"
+      },
+      {
+        "path": "test/db.test.ts",
+        "blob": "54b70658cc6533245496247e088459fd2c0222fa"
+      },
+      {
+        "path": "test/diff-isolation.test.ts",
+        "blob": "fc0bef8e8a2ab942c26e66fdcdffa89696888192"
+      },
+      {
+        "path": "test/diff.test.ts",
+        "blob": "a2f547e15c14c0f3220b6b0d8484c75179ebeb8f"
+      },
+      {
+        "path": "test/fixtures/mono/package.json",
+        "blob": "b8a3e4f1414555da52ec53efef38fe587a2557e4"
+      },
+      {
+        "path": "test/fixtures/mono/packages/local-lib/package.json",
+        "blob": "53574340946e18d5587e5371a17cc0203a49fc45"
+      },
+      {
+        "path": "test/fixtures/mono/packages/local-lib/src/entry.ts",
+        "blob": "2f2a01d8437016616b652794137a43db74b0ad94"
+      },
+      {
+        "path": "test/fixtures/mono/shared/index.ts",
+        "blob": "949ed672ba51e394164dc36886a9e5ae5e063702"
+      },
+      {
+        "path": "test/fixtures/mono/src/app.ts",
+        "blob": "93e87232e7f503edbfb3e1941be4973f3c995df3"
+      },
+      {
+        "path": "test/fixtures/mono/src/greet.ts",
+        "blob": "a58ee37d6427f7fc88549929733b4fdbcdd82d19"
+      },
+      {
+        "path": "test/fixtures/mono/src/ns.ts",
+        "blob": "83202261294374527fa0ade4b3fc4eb04ceb3b8d"
+      },
+      {
+        "path": "test/fixtures/mono/src/unused.ts",
+        "blob": "b50618f9e9c1c2067463e4cd8adb3404b6ad2517"
+      },
+      {
+        "path": "test/fixtures/refs/package.json",
+        "blob": "456295a4a4c2fa88243ed555b7a248d664c84bc9"
+      },
+      {
+        "path": "test/fixtures/refs/pkg/package.json",
+        "blob": "8caa7496e4fd0ee4b92c232bb4b13fa63dcfe025"
+      },
+      {
+        "path": "test/fixtures/refs/pkg/src/core.ts",
+        "blob": "a9dd4a0173b736af870ceac5b1b2a253027a2ceb"
+      },
+      {
+        "path": "test/fixtures/refs/pkg/src/index.ts",
+        "blob": "b573b93ec67eb581438bbbc8227bbf63ebf7e9b9"
+      },
+      {
+        "path": "test/fixtures/refs/pkg/src/sub.ts",
+        "blob": "402b20048e418d4aa117da75ab67b4069a2eb8a1"
+      },
+      {
+        "path": "test/fixtures/refs/pkg2/package.json",
+        "blob": "7d3932a2c1fa1e4c0a24134c7ce2797ed3d08ebb"
+      },
+      {
+        "path": "test/fixtures/refs/pkg2/src/context/thing.ts",
+        "blob": "3b7c1cbe26d0edd84ddb67ce33167255de0a1154"
+      },
+      {
+        "path": "test/fixtures/refs/pkg2/src/index.ts",
+        "blob": "0ed191c387b1a17ec92011900694d2a1d71d4067"
+      },
+      {
+        "path": "test/fixtures/refs/pkg2/src/priv.bun.ts",
+        "blob": "fb5a9490fcd255ed27a30d0b90c9b89b4e5d5140"
+      },
+      {
+        "path": "test/fixtures/refs/pkg2/src/priv.node.ts",
+        "blob": "49bedb66f667cb31d3842b2c28a68988d0e6f3de"
+      },
+      {
+        "path": "test/fixtures/refs/pkg2/src/user.ts",
+        "blob": "94b3bd78c0937795e0bcb522f0656f1aefc1318b"
+      },
+      {
+        "path": "test/fixtures/refs/pkga/src/aliased.ts",
+        "blob": "b6d3829ca325eeae0200087dc226394cd94803b1"
+      },
+      {
+        "path": "test/fixtures/refs/pkga/src/usealias.ts",
+        "blob": "3e49fe0b1513e3205945519fd9d07410a22697e5"
+      },
+      {
+        "path": "test/fixtures/refs/src/aliasmix.ts",
+        "blob": "32e666e13923061d64d1d3ea8c19364cba498724"
+      },
+      {
+        "path": "test/fixtures/refs/src/aliasmix2.ts",
+        "blob": "f3ee02d343f8c0d88911ac4ea73b9199eb38753c"
+      },
+      {
+        "path": "test/fixtures/refs/src/aliasuse.ts",
+        "blob": "37b4f5e0a98c8b460d3affec444a31959c0501c3"
+      },
+      {
+        "path": "test/fixtures/refs/src/app.ts",
+        "blob": "abc8911ee5c66d6d9cd74a22638d1a44aa9811a7"
+      },
+      {
+        "path": "test/fixtures/refs/src/barrel.ts",
+        "blob": "4cabdf4917e0978e28e0efe10cd92ad118c8ad0c"
+      },
+      {
+        "path": "test/fixtures/refs/src/consumer.ts",
+        "blob": "27e6458e2043ce284c065ffff5f54194a90f145a"
+      },
+      {
+        "path": "test/fixtures/refs/src/ctxuse.ts",
+        "blob": "b21a0f37f5cf669ce079fd2c99e2a517c3a040fd"
+      },
+      {
+        "path": "test/fixtures/refs/src/dotimp.ts",
+        "blob": "5fe653d5fc6918f6790f88180016be3b4536b888"
+      },
+      {
+        "path": "test/fixtures/refs/src/dynimp.ts",
+        "blob": "55815bd34bbc54401ff3e13f07a2c31c614faf8b"
+      },
+      {
+        "path": "test/fixtures/refs/src/dynmod.ts",
+        "blob": "1fd4f402419d656e3195a572d6430e58782c6a06"
+      },
+      {
+        "path": "test/fixtures/refs/src/foo.view.ts",
+        "blob": "0cbe26a1d757c860750662819b08b76559ab3d70"
+      },
+      {
+        "path": "test/fixtures/refs/src/helpers.ts",
+        "blob": "fba2f2860f1656f2bf596605b4e08e6a33730eb2"
+      },
+      {
+        "path": "test/fixtures/refs/src/impl.ts",
+        "blob": "faec811e9697f430fba455dca82c46fa8bf5c2ba"
+      },
+      {
+        "path": "test/fixtures/refs/src/namedbarrel.ts",
+        "blob": "e4f8059a437c8e66063666c5fb7b76642f11a18b"
+      },
+      {
+        "path": "test/fixtures/refs/src/nsbarrel.ts",
+        "blob": "f4b72694a9f5fb7df35a7d967e3c485c589884c4"
+      },
+      {
+        "path": "test/fixtures/refs/src/nsmod.ts",
+        "blob": "7c7e2c1c6ca41807ffc49f42cc92b6659d304e33"
+      },
+      {
+        "path": "test/fixtures/refs/src/nsprop.ts",
+        "blob": "f8502db5358bacaa29867ce49fdcca1eb5498571"
+      },
+      {
+        "path": "test/fixtures/refs/src/nsuser.ts",
+        "blob": "f8e34c048fa3bb4f44b980bf9216b879d5e30c14"
+      },
+      {
+        "path": "test/fixtures/refs/src/reader.ts",
+        "blob": "0c8353a814b8591fd09a5b9bce019ca6a66cd381"
+      },
+      {
+        "path": "test/fixtures/refs/src/shorthand.ts",
+        "blob": "832e31f64449bb166aae2a413ed995fe8b4c96a3"
+      },
+      {
+        "path": "test/fixtures/refs/src/types.ts",
+        "blob": "72d832d4bd161233b9d1e58af62674205b141b77"
+      },
+      {
+        "path": "test/fixtures/refs/src/types2.ts",
+        "blob": "7066826362e83f1c2114175496a29df625064b91"
+      },
+      {
+        "path": "test/fixtures/refs/src/typeuse.ts",
+        "blob": "095f41a407695f6f5301a7746a21eb0a50f70d91"
+      },
+      {
+        "path": "test/fixtures/refs/src/wrapimp.ts",
+        "blob": "63698a5fad3876f4fdeed843bcd1b62b7b7f1cd5"
+      },
+      {
+        "path": "test/fixtures/refs/src/wraplib.ts",
+        "blob": "931407b0630fb2541f733169b88a2c83a459410a"
+      },
+      {
+        "path": "test/fixtures/refs/src/wrapmod.ts",
+        "blob": "695f7c11ff0522caa36a760c40ea7606d0fab8ec"
+      },
+      {
+        "path": "test/fixtures/ws/README.md",
+        "blob": "117b40c8a9d156e017fbd5e5ac6dfafecd30885e"
+      },
+      {
+        "path": "test/fixtures/ws/docs/guide.md",
+        "blob": "3e762605ccdb7da9b1bc84620cf2d171f7a16a6d"
+      },
+      {
+        "path": "test/fixtures/ws/docs/old-notes.md",
+        "blob": "51cc1229fa11ab2c1f0d7a3e31a24cc22dbab42f"
+      },
+      {
+        "path": "test/fixtures/ws/docs/spec.md",
+        "blob": "b55b7f070519ef7d02795dbc24c67abb8cd7e885"
+      },
+      {
+        "path": "test/fixtures/ws/package.json",
+        "blob": "c45e2f19d1ad2657e05e1090149ce9e9e2b83e92"
+      },
+      {
+        "path": "test/fixtures/ws/src/graph/cycle-a.ts",
+        "blob": "8b1a06d777f280075147c9c6516c2f2cb8546035"
+      },
+      {
+        "path": "test/fixtures/ws/src/graph/cycle-b.ts",
+        "blob": "571554c8faf8e9df4da4f660350bd72f9bd73a80"
+      },
+      {
+        "path": "test/fixtures/ws/src/graph/walker.test.ts",
+        "blob": "101be6ef1b5fe063983a6b36a31be34a8d154317"
+      },
+      {
+        "path": "test/fixtures/ws/src/graph/walker.ts",
+        "blob": "949013e5cca26aa50122d6e5fd74f2354d9b87e4"
+      },
+      {
+        "path": "test/fixtures/ws/src/greet.ts",
+        "blob": "ab1e7d0e7a03898171fe8c973b2afd38295e8691"
+      },
+      {
+        "path": "test/fixtures/ws/src/index.ts",
+        "blob": "ab8b3b8e74415cf62f906a191849d7f10a9bebcf"
+      },
+      {
+        "path": "test/fixtures/ws/src/legacy.ts",
+        "blob": "1b068934d98433b90a57cf4a84c1443325ec86a9"
+      },
+      {
+        "path": "test/helpers.ts",
+        "blob": "e45b743412bf1e164cbd05c4c119b0d6a666c3ba"
+      },
+      {
+        "path": "test/indexer.test.ts",
+        "blob": "f48e98d66b0ad0c6dc98230c7e78bb0d66db14ed"
+      },
+      {
+        "path": "test/mcp.test.ts",
+        "blob": "f56816af0868c7d0a50bee57f0840a866755ddda"
+      },
+      {
+        "path": "test/plan.test.ts",
+        "blob": "e1be6f74090e2f02c894021a84b0330ba395f08b"
+      },
+      {
+        "path": "test/query.test.ts",
+        "blob": "e56db02483f38fb36e3b738939215e08588210b2"
+      },
+      {
+        "path": "test/version-sync.test.ts",
+        "blob": "aba4ca376d6b10bdbbe9c4be1b74bbb28f347c03"
+      },
+      {
+        "path": "vitest.config.ts",
+        "blob": "7542e428fedf65cef3de7ed926d655e894c411bd"
+      }
+    ],
+    "edges": [
+      [
+        "README.ko.md",
+        "README.md"
+      ],
+      [
+        "bin/cli.ts",
+        "src/db.ts"
+      ],
+      [
+        "bin/cli.ts",
+        "src/diff.ts"
+      ],
+      [
+        "bin/cli.ts",
+        "src/indexer.ts"
+      ],
+      [
+        "bin/cli.ts",
+        "src/mcp.ts"
+      ],
+      [
+        "bin/cli.ts",
+        "src/plan.ts"
+      ],
+      [
+        "bin/cli.ts",
+        "src/query.ts"
+      ],
+      [
+        "bin/cli.ts",
+        "src/types.ts"
+      ],
+      [
+        "src/ast.ts",
+        "src/indexer.ts"
+      ],
+      [
+        "src/db.ts",
+        "src/diff.ts"
+      ],
+      [
+        "src/db.ts",
+        "src/index.ts"
+      ],
+      [
+        "src/db.ts",
+        "src/indexer.ts"
+      ],
+      [
+        "src/db.ts",
+        "src/mcp.ts"
+      ],
+      [
+        "src/db.ts",
+        "src/plan.ts"
+      ],
+      [
+        "src/db.ts",
+        "src/query.ts"
+      ],
+      [
+        "src/db.ts",
+        "src/types.ts"
+      ],
+      [
+        "src/db.ts",
+        "src/util.ts"
+      ],
+      [
+        "src/db.ts",
+        "test/db.test.ts"
+      ],
+      [
+        "src/db.ts",
+        "test/diff-isolation.test.ts"
+      ],
+      [
+        "src/db.ts",
+        "test/diff.test.ts"
+      ],
+      [
+        "src/db.ts",
+        "test/helpers.ts"
+      ],
+      [
+        "src/db.ts",
+        "test/indexer.test.ts"
+      ],
+      [
+        "src/db.ts",
+        "test/mcp.test.ts"
+      ],
+      [
+        "src/diff.ts",
+        "src/indexer.ts"
+      ],
+      [
+        "src/diff.ts",
+        "src/mcp.ts"
+      ],
+      [
+        "src/diff.ts",
+        "src/query.ts"
+      ],
+      [
+        "src/diff.ts",
+        "src/types.ts"
+      ],
+      [
+        "src/diff.ts",
+        "test/diff-isolation.test.ts"
+      ],
+      [
+        "src/diff.ts",
+        "test/diff.test.ts"
+      ],
+      [
+        "src/index.ts",
+        "src/indexer.ts"
+      ],
+      [
+        "src/index.ts",
+        "src/mcp.ts"
+      ],
+      [
+        "src/index.ts",
+        "src/plan.ts"
+      ],
+      [
+        "src/index.ts",
+        "src/query.ts"
+      ],
+      [
+        "src/index.ts",
+        "src/types.ts"
+      ],
+      [
+        "src/indexer.ts",
+        "src/mcp.ts"
+      ],
+      [
+        "src/indexer.ts",
+        "src/types.ts"
+      ],
+      [
+        "src/indexer.ts",
+        "src/util.ts"
+      ],
+      [
+        "src/indexer.ts",
+        "test/diff-isolation.test.ts"
+      ],
+      [
+        "src/indexer.ts",
+        "test/diff.test.ts"
+      ],
+      [
+        "src/indexer.ts",
+        "test/helpers.ts"
+      ],
+      [
+        "src/indexer.ts",
+        "test/indexer.test.ts"
+      ],
+      [
+        "src/mcp.ts",
+        "src/plan.ts"
+      ],
+      [
+        "src/mcp.ts",
+        "src/query.ts"
+      ],
+      [
+        "src/mcp.ts",
+        "src/types.ts"
+      ],
+      [
+        "src/plan.ts",
+        "src/query.ts"
+      ],
+      [
+        "src/plan.ts",
+        "src/types.ts"
+      ],
+      [
+        "src/plan.ts",
+        "src/util.ts"
+      ],
+      [
+        "src/plan.ts",
+        "test/plan.test.ts"
+      ],
+      [
+        "src/query.ts",
+        "src/types.ts"
+      ],
+      [
+        "src/query.ts",
+        "src/util.ts"
+      ],
+      [
+        "src/query.ts",
+        "test/indexer.test.ts"
+      ],
+      [
+        "src/query.ts",
+        "test/plan.test.ts"
+      ],
+      [
+        "src/query.ts",
+        "test/query.test.ts"
+      ],
+      [
+        "src/types.ts",
+        "src/util.ts"
+      ],
+      [
+        "src/types.ts",
+        "test/helpers.ts"
+      ],
+      [
+        "test/db.test.ts",
+        "test/helpers.ts"
+      ],
+      [
+        "test/diff.test.ts",
+        "test/helpers.ts"
+      ],
+      [
+        "test/fixtures/mono/package.json",
+        "test/fixtures/mono/packages/local-lib/package.json"
+      ],
+      [
+        "test/fixtures/mono/packages/local-lib/package.json",
+        "test/fixtures/mono/src/app.ts"
+      ],
+      [
+        "test/fixtures/mono/packages/local-lib/package.json",
+        "test/fixtures/mono/src/ns.ts"
+      ],
+      [
+        "test/fixtures/mono/packages/local-lib/src/entry.ts",
+        "test/fixtures/mono/src/app.ts"
+      ],
+      [
+        "test/fixtures/mono/packages/local-lib/src/entry.ts",
+        "test/fixtures/mono/src/ns.ts"
+      ],
+      [
+        "test/fixtures/mono/shared/index.ts",
+        "test/fixtures/mono/src/app.ts"
+      ],
+      [
+        "test/fixtures/mono/src/app.ts",
+        "test/fixtures/mono/src/greet.ts"
+      ],
+      [
+        "test/fixtures/mono/src/greet.ts",
+        "test/fixtures/mono/src/unused.ts"
+      ],
+      [
+        "test/fixtures/refs/package.json",
+        "test/fixtures/refs/pkg/package.json"
+      ],
+      [
+        "test/fixtures/refs/pkg/package.json",
+        "test/fixtures/refs/src/app.ts"
+      ],
+      [
+        "test/fixtures/refs/pkg/src/core.ts",
+        "test/fixtures/refs/pkg/src/index.ts"
+      ],
+      [
+        "test/fixtures/refs/pkg/src/core.ts",
+        "test/fixtures/refs/src/app.ts"
+      ],
+      [
+        "test/fixtures/refs/pkg/src/index.ts",
+        "test/fixtures/refs/pkg/src/sub.ts"
+      ],
+      [
+        "test/fixtures/refs/pkg/src/index.ts",
+        "test/fixtures/refs/src/app.ts"
+      ],
+      [
+        "test/fixtures/refs/pkg/src/sub.ts",
+        "test/fixtures/refs/src/app.ts"
+      ],
+      [
+        "test/fixtures/refs/pkg2/package.json",
+        "test/fixtures/refs/pkg2/src/user.ts"
+      ],
+      [
+        "test/fixtures/refs/pkg2/package.json",
+        "test/fixtures/refs/src/ctxuse.ts"
+      ],
+      [
+        "test/fixtures/refs/pkg2/src/context/thing.ts",
+        "test/fixtures/refs/src/ctxuse.ts"
+      ],
+      [
+        "test/fixtures/refs/pkg2/src/priv.node.ts",
+        "test/fixtures/refs/pkg2/src/user.ts"
+      ],
+      [
+        "test/fixtures/refs/pkga/src/aliased.ts",
+        "test/fixtures/refs/pkga/src/usealias.ts"
+      ],
+      [
+        "test/fixtures/refs/src/aliasmix.ts",
+        "test/fixtures/refs/src/reader.ts"
+      ],
+      [
+        "test/fixtures/refs/src/aliasmix2.ts",
+        "test/fixtures/refs/src/reader.ts"
+      ],
+      [
+        "test/fixtures/refs/src/aliasuse.ts",
+        "test/fixtures/refs/src/reader.ts"
+      ],
+      [
+        "test/fixtures/refs/src/barrel.ts",
+        "test/fixtures/refs/src/consumer.ts"
+      ],
+      [
+        "test/fixtures/refs/src/barrel.ts",
+        "test/fixtures/refs/src/impl.ts"
+      ],
+      [
+        "test/fixtures/refs/src/consumer.ts",
+        "test/fixtures/refs/src/impl.ts"
+      ],
+      [
+        "test/fixtures/refs/src/dotimp.ts",
+        "test/fixtures/refs/src/foo.view.ts"
+      ],
+      [
+        "test/fixtures/refs/src/dynimp.ts",
+        "test/fixtures/refs/src/dynmod.ts"
+      ],
+      [
+        "test/fixtures/refs/src/helpers.ts",
+        "test/fixtures/refs/src/shorthand.ts"
+      ],
+      [
+        "test/fixtures/refs/src/impl.ts",
+        "test/fixtures/refs/src/namedbarrel.ts"
+      ],
+      [
+        "test/fixtures/refs/src/nsbarrel.ts",
+        "test/fixtures/refs/src/nsmod.ts"
+      ],
+      [
+        "test/fixtures/refs/src/nsbarrel.ts",
+        "test/fixtures/refs/src/nsuser.ts"
+      ],
+      [
+        "test/fixtures/refs/src/nsprop.ts",
+        "test/fixtures/refs/src/wrapmod.ts"
+      ],
+      [
+        "test/fixtures/refs/src/types.ts",
+        "test/fixtures/refs/src/typeuse.ts"
+      ],
+      [
+        "test/fixtures/refs/src/types2.ts",
+        "test/fixtures/refs/src/typeuse.ts"
+      ],
+      [
+        "test/fixtures/refs/src/wrapimp.ts",
+        "test/fixtures/refs/src/wraplib.ts"
+      ],
+      [
+        "test/fixtures/ws/README.md",
+        "test/fixtures/ws/docs/spec.md"
+      ],
+      [
+        "test/fixtures/ws/README.md",
+        "test/fixtures/ws/src/index.ts"
+      ],
+      [
+        "test/fixtures/ws/docs/guide.md",
+        "test/fixtures/ws/docs/spec.md"
+      ],
+      [
+        "test/fixtures/ws/docs/old-notes.md",
+        "test/fixtures/ws/docs/spec.md"
+      ],
+      [
+        "test/fixtures/ws/docs/spec.md",
+        "test/fixtures/ws/src/graph/walker.ts"
+      ],
+      [
+        "test/fixtures/ws/src/graph/cycle-a.ts",
+        "test/fixtures/ws/src/graph/cycle-b.ts"
+      ],
+      [
+        "test/fixtures/ws/src/graph/cycle-a.ts",
+        "test/fixtures/ws/src/graph/walker.ts"
+      ],
+      [
+        "test/fixtures/ws/src/graph/walker.test.ts",
+        "test/fixtures/ws/src/graph/walker.ts"
+      ],
+      [
+        "test/fixtures/ws/src/graph/walker.ts",
+        "test/fixtures/ws/src/index.ts"
+      ],
+      [
+        "test/fixtures/ws/src/greet.ts",
+        "test/fixtures/ws/src/index.ts"
+      ],
+      [
+        "test/helpers.ts",
+        "test/indexer.test.ts"
+      ],
+      [
+        "test/helpers.ts",
+        "test/mcp.test.ts"
+      ],
+      [
+        "test/helpers.ts",
+        "test/plan.test.ts"
+      ],
+      [
+        "test/helpers.ts",
+        "test/query.test.ts"
+      ],
+      [
+        "test/helpers.ts",
+        "test/version-sync.test.ts"
+      ]
+    ]
+  },
+  "formula": "(1 + mean(log1p(file degree) + log1p(candidate changes))) / (1 + max(selected count by module))",
+  "baseline": {
+    "method": "existing newest-first mine order",
+    "ids": [
+      "sqlite-graph-71-32f4b4e7",
+      "sqlite-graph-71-dfd88e60",
+      "sqlite-graph-71-015e5b9e"
+    ],
+    "modules": {
+      "bin": 2,
+      "scripts": 1,
+      "src": 2
+    },
+    "moduleCount": 3,
+    "meanFileJaccard": 0.1111111111111111,
+    "pairs": 3
+  },
+  "weighted": {
+    "method": "seeded weighted sampling without replacement, module penalty",
+    "ids": [
+      "sqlite-graph-71-4968d107",
+      "sqlite-graph-71-015e5b9e",
+      "sqlite-graph-71-a5c45bb8"
+    ],
+    "modules": {
+      "bin": 3,
+      "src": 2
+    },
+    "moduleCount": 2,
+    "meanFileJaccard": 0.35555555555555557,
+    "pairs": 3,
+    "draws": [
+      {
+        "taskId": "sqlite-graph-71-4968d107",
+        "random": 0.6011037519201636,
+        "weight": 4.616105011951971,
+        "totalWeight": 24.700234820363754,
+        "probability": 0.18688506589201692
+      },
+      {
+        "taskId": "sqlite-graph-71-015e5b9e",
+        "random": 0.44829055899754167,
+        "weight": 2.100108351808002,
+        "totalWeight": 10.888638494485864,
+        "probability": 0.19287152869217963
+      },
+      {
+        "taskId": "sqlite-graph-71-a5c45bb8",
+        "random": 0.8524657934904099,
+        "weight": 1.6237336703026302,
+        "totalWeight": 6.4234024886385575,
+        "probability": 0.2527840460215005
+      }
+    ]
+  },
+  "reasons": [
+    {
+      "taskId": "sqlite-graph-71-32f4b4e7",
+      "targetCommit": "32f4b4e748e8bf74734b57b71851390f0bfd197e",
+      "baseCommit": "9fd34c58949a56ed1b6a55b978a381223ffdfcf1",
+      "files": [
+        {
+          "path": "scripts/check-version-sync.mjs",
+          "degree": 0,
+          "candidateChanges": 1
+        }
+      ],
+      "modules": [
+        "scripts"
+      ],
+      "baseWeight": 1.6931471805599454
+    },
+    {
+      "taskId": "sqlite-graph-71-dfd88e60",
+      "targetCommit": "dfd88e60a78f6a3d6e52b5276f629bf06938b038",
+      "baseCommit": "9ad81fbd1792c68dd03564063a70ef366a21b465",
+      "files": [
+        {
+          "path": "bin/cli.ts",
+          "degree": 7,
+          "candidateChanges": 5
+        },
+        {
+          "path": "src/diff.ts",
+          "degree": 8,
+          "candidateChanges": 1
+        },
+        {
+          "path": "src/mcp.ts",
+          "degree": 8,
+          "candidateChanges": 3
+        }
+      ],
+      "modules": [
+        "bin",
+        "src"
+      ],
+      "baseWeight": 4.448363902420056
+    },
+    {
+      "taskId": "sqlite-graph-71-015e5b9e",
+      "targetCommit": "015e5b9e05209d5a8d14d77ac4d8b4b8b46dbc39",
+      "baseCommit": "df96fe4a41f9a59a683ea5e4bb97d0e2e0ae572c",
+      "files": [
+        {
+          "path": "bin/cli.ts",
+          "degree": 7,
+          "candidateChanges": 5
+        },
+        {
+          "path": "src/ast.ts",
+          "degree": 1,
+          "candidateChanges": 1
+        },
+        {
+          "path": "src/indexer.ts",
+          "degree": 12,
+          "candidateChanges": 2
+        },
+        {
+          "path": "src/mcp.ts",
+          "degree": 8,
+          "candidateChanges": 3
+        },
+        {
+          "path": "src/types.ts",
+          "degree": 10,
+          "candidateChanges": 2
+        }
+      ],
+      "modules": [
+        "bin",
+        "src"
+      ],
+      "baseWeight": 4.200216703616004
+    },
+    {
+      "taskId": "sqlite-graph-71-4968d107",
+      "targetCommit": "4968d1072c53777f932e1f76fab9fbfeabb16b41",
+      "baseCommit": "79883fd8ab5516b9102071a138090da25e6169ec",
+      "files": [
+        {
+          "path": "bin/cli.ts",
+          "degree": 7,
+          "candidateChanges": 5
+        },
+        {
+          "path": "src/db.ts",
+          "degree": 15,
+          "candidateChanges": 1
+        },
+        {
+          "path": "src/indexer.ts",
+          "degree": 12,
+          "candidateChanges": 2
+        },
+        {
+          "path": "src/mcp.ts",
+          "degree": 8,
+          "candidateChanges": 3
+        },
+        {
+          "path": "src/types.ts",
+          "degree": 10,
+          "candidateChanges": 2
+        }
+      ],
+      "modules": [
+        "bin",
+        "src"
+      ],
+      "baseWeight": 4.616105011951971
+    },
+    {
+      "taskId": "sqlite-graph-71-79883fd8",
+      "targetCommit": "79883fd8ab5516b9102071a138090da25e6169ec",
+      "baseCommit": "a5c45bb8196f1ee9c2920dd31bb4f048f20d5277",
+      "files": [
+        {
+          "path": "bin/cli.ts",
+          "degree": 7,
+          "candidateChanges": 5
+        }
+      ],
+      "modules": [
+        "bin"
+      ],
+      "baseWeight": 4.871201010907891
+    },
+    {
+      "taskId": "sqlite-graph-71-a5c45bb8",
+      "targetCommit": "a5c45bb8196f1ee9c2920dd31bb4f048f20d5277",
+      "baseCommit": "0e3e710f91864eefcc371cae82f53de61f836ecc",
+      "files": [
+        {
+          "path": "bin/cli.ts",
+          "degree": 7,
+          "candidateChanges": 5
+        }
+      ],
+      "modules": [
+        "bin"
+      ],
+      "baseWeight": 4.871201010907891
+    }
+  ],
+  "delta": {
+    "moduleCount": -1,
+    "meanFileJaccard": 0.24444444444444446
+  },
+  "limitations": [
+    "Offline selection experiment only. No harness was run; no quality, performance or cost conclusion follows.",
+    "A single HEAD graph is used for historical tasks. Missing or deleted files have unknown degree (null), not proven isolation.",
+    "Change frequency counts the fixed mined candidate pool, not all repository history. Modules are POSIX parent directories.",
+    "Snapshot producer metadata is provenance, not an authenticity signature. Use the included exporter with trusted code and a clean checkout.",
+    "Coverage and file overlap are descriptive proxies, not evidence of task difficulty or representativeness. Zero or negative effects are retained."
+  ]
+}
