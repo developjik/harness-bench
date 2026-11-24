@@ -4,34 +4,62 @@ import { fileOverlap, lineSimilarity, patchStats } from './diff.js';
 import type { MinedTask, RunResult, Score, ScoreWeights, TestSummary } from './types.js';
 import { clamp01, round } from './util.js';
 
-export const DEFAULT_WEIGHTS: ScoreWeights = { test: 0.6, diff: 0.3, regression: 0.1 };
+export const DEFAULT_WEIGHTS: ScoreWeights = {
+  test: 0.6,
+  diff: 0.3,
+  regression: 0.1,
+};
 
-/**
- * A test that fails now but did not fail on the prepared base is a regression.
- * When names are unavailable the failure counts decide; with no baseline the
- * run is only regression-free when nothing fails at all.
- */
+export interface RegressionAssessment {
+  status: 'none' | 'detected' | 'unknown';
+  regressions: string[];
+  note?: string;
+}
+
+/** Compare identities before aggregate counts. Unknown evidence never earns clean credit. */
+export function assessRegressions(baseline: TestSummary | undefined, final: TestSummary): RegressionAssessment {
+  const unknown = (note: string): RegressionAssessment => ({
+    status: 'unknown',
+    regressions: [],
+    note,
+  });
+  if (!final.ran || final.timedOut || final.countsUncertain) return unknown('final test run is incomplete');
+  if (final.exitCode === 0 && final.failed === 0) return { status: 'none', regressions: [] };
+  if (!baseline?.ran || baseline.timedOut || baseline.countsUncertain) return unknown('no reliable baseline');
+  const a = baseline.failureIdentity,
+    b = final.failureIdentity;
+  if (
+    a &&
+    b &&
+    baseline.command === final.command &&
+    a.runner === b.runner &&
+    a.unit === b.unit &&
+    a.complete &&
+    b.complete &&
+    a.ids.length === baseline.failed &&
+    b.ids.length === final.failed &&
+    baseline.failedTestsComplete !== false &&
+    final.failedTestsComplete !== false
+  ) {
+    const fresh = b.ids.filter((id) => !a.ids.includes(id));
+    return { status: fresh.length ? 'detected' : 'none', regressions: fresh };
+  }
+  if (baseline.countsKnown && final.countsKnown && final.failed > baseline.failed) {
+    return {
+      status: 'detected',
+      regressions: ['(failure count rose above the prepared base)'],
+      note: 'aggregate fallback; test identities unavailable',
+    };
+  }
+  return unknown(
+    'failure identities are incomplete or use different runners/units; equal or lower counts do not prove no regression',
+  );
+}
+
+/** Compatibility API: uncertainty is a nonempty marker rather than a clean pass. */
 export function detectRegressions(baseline: TestSummary | undefined, final: TestSummary): string[] {
-  if (!baseline || !baseline.ran) {
-    return final.failed > 0 ? ['(no baseline: failures without a reference point)'] : [];
-  }
-
-  // Both sides report counts: the prepared base always has failing tests (the new
-  // ones). More failures than the base is the unambiguous regression signal. Names
-  // are compared only then, because failure labels (file vs test) may differ
-  // between a module error on the base and an assertion error after a run.
-  if (baseline.countsKnown && final.countsKnown) {
-    if (final.failed <= baseline.failed) return [];
-    const newNames = final.failedTests.filter((name) => !baseline.failedTests.includes(name));
-    return newNames.length > 0 ? newNames : ['(failure count rose above the prepared base)'];
-  }
-
-  const newNames = final.failedTests.filter((name) => !baseline.failedTests.includes(name));
-  if (newNames.length > 0) return newNames;
-  if (final.passRate < baseline.passRate - 1e-9) {
-    return ['(pass rate dropped below the prepared base)'];
-  }
-  return [];
+  const result = assessRegressions(baseline, final);
+  return result.status === 'unknown' ? [`(regression unknown: ${result.note})`] : result.regressions;
 }
 
 export interface ScoreInput {
@@ -63,13 +91,12 @@ export function scoreRun(task: MinedTask, input: ScoreInput): Score {
       ? clamp01((input.test.passed - input.baseline.passed) / Math.max(1, input.baseline.failed))
       : testScore;
   const allTestsPassed = input.test.ran && input.test.exitCode === 0 && input.test.failed === 0;
-  const regressions = detectRegressions(input.baseline, input.test);
-  const regressionFree = regressions.length === 0;
+  const assessment = assessRegressions(input.baseline, input.test);
+  const regressions = assessment.regressions;
+  const regressionFree = assessment.status === 'none';
   const regressionScore = regressionFree ? 1 : 0;
 
-  const total = clamp01(
-    weights.test * solvedRate + weights.diff * diffScore + weights.regression * regressionScore,
-  );
+  const total = clamp01(weights.test * solvedRate + weights.diff * diffScore + weights.regression * regressionScore);
 
   return {
     total: round(total, 4),
@@ -79,6 +106,8 @@ export function scoreRun(task: MinedTask, input: ScoreInput): Score {
     regression: regressionScore,
     allTestsPassed,
     regressionFree,
+    regressionStatus: assessment.status,
+    regressionNote: assessment.note,
     regressions,
     file: {
       recall: round(overlap.recall, 4),
