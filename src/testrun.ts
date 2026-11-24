@@ -314,12 +314,30 @@ function outputTruncationNote(capture: OutputCapture): string | undefined {
 function failureIdentity(text: string, failed: number | undefined, complete: boolean): TestSummary['failureIdentity'] {
   let runner: string | undefined;
   let ids: string[] = [];
+  let executionErrors = false;
   if (/Test Files/.test(text)) {
     runner = 'vitest';
-    ids = [...text.matchAll(/^\s*FAIL\s+(\S+)\s+>\s+(.+)$/gm)].map((m) => `${m[1]} > ${m[2]?.trim()}`);
+    ids = [...text.matchAll(/^\s*FAIL\s+(.+?)\s+>\s+(.+)$/gm)].map((m) => `${m[1]?.trim()} > ${m[2]?.trim()}`);
+    executionErrors = /^\s*FAIL\s+(?!.*\s>\s).+$/m.test(text) || /^\s*(?:⎯+\s*)?Unhandled (?:Errors?|Rejections?)\s*(?:⎯+)?\s*$|^\s*Errors\s+[1-9]\d*\s+errors?\s*$/im.test(text);
   } else if (/short test summary info|=+.*(?:failed|passed).*in \d/.test(text)) {
     runner = 'pytest';
-    ids = [...text.matchAll(/^FAILED\s+(\S+::\S+)/gm)].map((m) => m[1]!);
+    for (const match of text.matchAll(/^FAILED\s+(.+)$/gm)) {
+      const line = match[1]!;
+      // Multiple/nested brackets are ambiguous in pytest's human-readable summary.
+      if ((line.match(/\[/g)?.length ?? 0) > 1 || (line.match(/\]/g)?.length ?? 0) > 1) complete = false;
+      let depth = 0;
+      let end = line.length;
+      for (let i = 0; i < line.length; i++) {
+        if (line[i] === '[') { if (depth) complete = false; depth++; }
+        if (line[i] === ']') { depth--; if (depth < 0) complete = false; }
+        if (line.slice(i, i + 3) === ' - ' && depth === 0) { end = i; break; }
+      }
+      if (depth !== 0) complete = false;
+      const id = line.slice(0, end).trim();
+      if (!id.includes('::')) complete = false;
+      ids.push(id);
+    }
+    executionErrors = /^ERROR\s|^=+.*(?:,|\s)[1-9]\d* errors?(?:,|\s|=)/m.test(text);
   }
   if (!runner) return undefined;
   ids = [...new Set(ids)];
@@ -327,7 +345,7 @@ function failureIdentity(text: string, failed: number | undefined, complete: boo
     runner,
     unit: 'test',
     ids,
-    complete: complete && failed !== undefined && ids.length === failed,
+    complete: complete && !executionErrors && failed !== undefined && ids.length === failed,
   };
 }
 
