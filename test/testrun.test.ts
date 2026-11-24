@@ -129,6 +129,7 @@ describe('summarizeTestRun', () => {
     expect(summary.countsKnown).toBe(true);
     expect(summary.failed).toBe(1);
     expect(summary.passed).toBe(3);
+    expect(summary.failureIdentity).toEqual({runner:'vitest',unit:'test',ids:['src/math.test.ts > math > multiplies'],complete:true});
     expect(summary.total).toBe(4);
     expect(summary.passRate).toBeCloseTo(0.75);
     expect(summary.failedTests.join(' ')).toContain('multiplies');
