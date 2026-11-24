@@ -1,8 +1,8 @@
 // Explicitly executes a trusted, built sqlite-graph-mcp checkout supplied by the operator.
 // No network, no credentials, no live database opened or modified.
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, rmSync, writeFileSync, mkdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { join, resolve, dirname } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import Database from 'better-sqlite3';
@@ -11,12 +11,22 @@ if (!repoArg || !companionArg || !outArg) throw new Error('usage: node scripts/e
 const repo = resolve(repoArg), companion = resolve(companionArg);
 const git = (cwd, ...args) => { const r = spawnSync('git', args, {cwd, encoding:'utf8', timeout:120000, maxBuffer:32*1024*1024, env:{...process.env,GIT_TERMINAL_PROMPT:'0',GIT_PAGER:'cat'}});if(r.status!==0)throw new Error('git read failed');return r.stdout; };
 for (const dir of [repo, companion]) if (git(dir,'status','--porcelain','--untracked-files=normal').trim()) throw new Error('both checkouts must be clean');
+if (spawnSync('git',['config','--get-regexp','^remote\\..*\\.promisor$'],{cwd:repo,encoding:'utf8'}).stdout.trim()) throw new Error('export requires a full clone, not a partial/promisor clone');
 const commit = git(repo,'rev-parse','HEAD').trim(), producerCommit=git(companion,'rev-parse','HEAD').trim();
 const temp=mkdtempSync(join(tmpdir(),'selection-graph-'));
 try {
+ const source=join(temp,'source');mkdirSync(source);
+ // Index only committed regular blobs, never ignored local files or symlinks.
+ for(const row of git(repo,'ls-tree','-rz','--full-tree',commit).split('\0')) {
+  const m=/^(100644|100755) blob ([a-f0-9]{40})\t([\s\S]+)$/.exec(row);if(!m)continue;
+  const rel=m[3];if(rel.startsWith('/')||rel.split('/').some(s=>s==='..'||s==='.'||!s))throw new Error('unsafe git path');
+  const content=spawnSync('git',['cat-file','blob',m[2]],{cwd:repo,timeout:30000,maxBuffer:16*1024*1024,env:{...process.env,GIT_NO_LAZY_FETCH:'1',GIT_TERMINAL_PROMPT:'0'}});
+  if(content.status!==0)throw new Error('missing or oversized local blob');
+  const destination=join(source,rel);mkdirSync(dirname(destination),{recursive:true});writeFileSync(destination,content.stdout);
+ }
  const {indexWorkspace}=await import(pathToFileURL(join(companion,'dist/src/index.js')).href);
  const path=join(temp,'graph.db');
- await indexWorkspace({root:repo,dbPath:path,engine:'heuristic'});
+ await indexWorkspace({root:source,dbPath:path,engine:'heuristic'});
  const db=new Database(path,{readonly:true,fileMustExist:true});
  let nodes, edges;
  try {
