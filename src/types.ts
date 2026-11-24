@@ -58,6 +58,13 @@ export interface TestSummary {
   total: number;
   passRate: number;
   failedTests: string[];
+  /** Comparable, runner-qualified test identities; absent for legacy/ambiguous output. */
+  failureIdentity?: {
+    runner: string;
+    unit: 'test';
+    ids: string[];
+    complete: boolean;
+  };
   countsKnown: boolean;
   /** Byte limits and retained ranges for captured stdout and stderr. */
   outputCapture?: OutputCapture;
@@ -94,6 +101,8 @@ export interface Score {
   regression: number;
   allTestsPassed: boolean;
   regressionFree: boolean;
+  regressionStatus?: 'none' | 'detected' | 'unknown';
+  regressionNote?: string;
   regressions: string[];
   file: FileScore;
   lineSimilarity: number;
