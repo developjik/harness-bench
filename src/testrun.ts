@@ -314,12 +314,18 @@ function outputTruncationNote(capture: OutputCapture): string | undefined {
 function failureIdentity(text: string, failed: number | undefined, complete: boolean): TestSummary['failureIdentity'] {
   let runner: string | undefined;
   let ids: string[] = [];
+  let executionErrors = false;
   if (/Test Files/.test(text)) {
     runner = 'vitest';
-    ids = [...text.matchAll(/^\s*FAIL\s+(\S+)\s+>\s+(.+)$/gm)].map((m) => `${m[1]} > ${m[2]?.trim()}`);
+    ids = [...text.matchAll(/^\s*FAIL\s+(.+?)\s+>\s+(.+)$/gm)].map((m) => `${m[1]?.trim()} > ${m[2]?.trim()}`);
+    executionErrors = /^\s*FAIL\s+(?!.*\s>\s).+$/m.test(text) || /Unhandled (?:Error|Rejection)|\d+ (?:unhandled )?errors?/i.test(text);
   } else if (/short test summary info|=+.*(?:failed|passed).*in \d/.test(text)) {
     runner = 'pytest';
-    ids = [...text.matchAll(/^FAILED\s+(\S+::\S+)/gm)].map((m) => m[1]!);
+    ids = [...text.matchAll(/^FAILED\s+(.+?)(?:\s+-\s+.*)?$/gm)].map((m) => m[1]!.trim());
+    executionErrors = /^ERROR\s|\b[1-9]\d* errors?\b/m.test(text);
+    // A pytest parameter ID can itself contain the summary delimiter. Without
+    // structured output those lines cannot safely be split into ID and error.
+    if (ids.some(id => !id.includes('::') || (id.includes('[') && !id.endsWith(']')))) complete = false;
   }
   if (!runner) return undefined;
   ids = [...new Set(ids)];
@@ -327,7 +333,7 @@ function failureIdentity(text: string, failed: number | undefined, complete: boo
     runner,
     unit: 'test',
     ids,
-    complete: complete && failed !== undefined && ids.length === failed,
+    complete: complete && !executionErrors && failed !== undefined && ids.length === failed,
   };
 }
 
