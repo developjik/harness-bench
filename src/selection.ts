@@ -89,7 +89,7 @@ export function compareSelections(tasks: MinedTask[], graph: SelectionGraph, cou
   const b = metrics(baseline), w = metrics(weighted);
   return {
     version: SELECTION_VERSION, seed, count, candidateCount: tasks.length,
-    candidateHash: digest(tasks.map(t => ({ id: t.id, base: t.baseCommit, target: t.targetCommit, files: t.implFiles, gold: digest(t.goldPatch) }))),
+    candidateHash: digest(tasks.map(t => ({ id: t.id, base: t.baseCommit, target: t.targetCommit, files: t.implFiles }))),
     graphHash: digest(graph), graph,
     formula: '(1 + mean(log1p(file degree) + log1p(candidate changes))) / (1 + max(selected count by module))',
     baseline: { method: 'existing newest-first mine order', ids: baseline.map(t => t.id), ...b },
