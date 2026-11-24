@@ -240,3 +240,14 @@ Rescore cannot recover IDs truncated or omitted by an older parser. Rerun those 
 ## Development baseline (DEV-128)
 
 Use Node.js 22.12.0 (`.nvmrc`) for development and CI. Vitest 5.1.1 requires Node 22.12+ on its supported release lines; Node 20.19 is outside its declared development support range. It may execute there, but CI does not treat that as supported test-runner usage. This development requirement does not change the package engine declaration. Runtime compatibility must be checked using the built package, separately from the test runner. TypeScript 7.0.2 is the development compiler baseline.
+
+## Experimental graph-weighted task selection
+
+`select` compares an opt-in graph-weighted sample with the existing newest-first miner order. It uses the same fixed candidate pool and count, records a uint32 seed, and writes graph/candidate hashes, per-file evidence, selected IDs, module distributions and file overlap. It runs no harness or test command and leaves `mine`/`run` defaults unchanged. Use a clean checkout and a snapshot from the included trusted-code exporter. Outputs are exclusive-create JSON files.
+
+```sh
+node scripts/export-selection-graph.mjs /path/to/clean-repo /path/to/trusted-built-sqlite-graph-mcp /tmp/graph.json
+node dist/bin/cli.js select --repo /path/to/clean-repo --graph-snapshot /tmp/graph.json --count 3 --seed 42 --out /tmp/comparison.json
+```
+
+The pinned offline experiment selected fewer modules and more overlapping files than the baseline. It does **not** establish an improvement or any real harness performance result. See [the method, negative result and exact replay](examples/graph-selection/README.md). No package release or external service is needed.
