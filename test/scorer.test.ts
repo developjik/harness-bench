@@ -1,5 +1,6 @@
 import {describe,expect,it} from 'vitest';
 import {assessRegressions,detectRegressions,scoreRun} from '../src/scorer.js';
+import {summarizeTestRun} from '../src/testrun.js';
 import type {TestSummary,MinedTask} from '../src/types.js';
 function summary(overrides: Partial<TestSummary> = {}): TestSummary {
   return {
@@ -33,6 +34,21 @@ function summary(overrides: Partial<TestSummary> = {}): TestSummary {
 
 function sampleTask(id:string):MinedTask {return {id,implFiles:[],implPatch:''} as unknown as MinedTask;}
 describe('regression identity comparison',()=>{
+  it.each(['vitest','pytest'])('detects A to B from real %s output', runner=>{
+    const parse=(id:string)=>summarizeTestRun(runner,{code:1,timedOut:false,durationMs:1,stderr:'',stdout:runner==='vitest' ? ` FAIL src/a.test.ts > suite > ${id}\n Test Files 1 failed (1)\n Tests 1 failed | 2 passed (3)` : `FAILED tests/test_a.py::${id} - assert false\n=== 1 failed, 2 passed in 0.12s ===`});
+    const a=parse('A'), b=parse('B');
+    expect(a.failureIdentity?.complete).toBe(true);
+    expect(assessRegressions(a,b)).toMatchObject({status:'detected',regressions:[runner==='vitest'?'src/a.test.ts > suite > B':'tests/test_a.py::B']});
+    expect(assessRegressions(a,a).status).toBe('none');
+    expect(assessRegressions(a,{...b,failedTestsComplete:false}).status).toBe('unknown');
+  });
+  it('keeps old records without identity metadata unknown',()=>{
+    const a=summary({exitCode:1,failed:1,failedTests:['A']});
+    const b=summary({exitCode:1,failed:1,failedTests:['B']});
+    delete a.failureIdentity; delete b.failureIdentity;
+    expect(assessRegressions(a,b).status).toBe('unknown');
+  });
+
   it('detects a replaced failure even when the failure count stays equal', () => {
     const base = summary({
       failed: 1,
