@@ -35,6 +35,7 @@ git 히스토리 ─mine─▶ 과제 ─┬─ git worktree @ 부모 커밋 + �
 ```sh
 git clone https://github.com/developjik/harness-bench
 cd harness-bench
+nvm install
 nvm use
 npm ci
 npm run build
