@@ -228,3 +228,7 @@ damon prompt "<task prompt>" --backend claude
 ## License
 
 MIT © Jeong Ingwon (developjik)
+
+### Regression identity checks (DEV-132)
+
+Regression checks compare complete test IDs from the same command and runner before counts. Vitest file+case paths and pytest node IDs are supported. File errors, different runners, truncated output, unsupported runners and legacy records without complete IDs report `unknown` even if failure counts stay equal or decrease, earning no 0.1 regression-free credit. Increased failure counts still use the aggregate fallback. Rescore saved results to apply the new assessment.
