@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseFailedTests, runShellCommand, summarizeTestRun } from '../src/testrun.js';
+import { appendOutputChunk, OUTPUT_CAP, parseFailedTests, runShellCommand, summarizeTestRun } from '../src/testrun.js';
 import { createTempDir } from './helpers.js';
 
 const VITEST_FAIL = `
@@ -242,12 +242,58 @@ describe('parseFailedTests', () => {
 });
 
 describe('runShellCommand', () => {
-  it('captures stdout and exit code', async () => {
+  it('captures stdout and exit code without marking short output truncated', async () => {
     const dir = createTempDir();
     const result = await runShellCommand(dir, 'echo hello && exit 3', 10_000);
     expect(result.stdout).toContain('hello');
     expect(result.code).toBe(3);
     expect(result.timedOut).toBe(false);
+    expect(result.outputCapture?.stdout).toMatchObject({ truncated: false, retainedRange: 'complete' });
+  });
+
+  it('retains a long stdout tail with the final test counts within the byte cap', async () => {
+    const dir = createTempDir();
+    const command = `node -e 'process.stdout.write("x".repeat(450000) + "\\n2 passed, 2 total\\n")'`;
+    const result = await runShellCommand(dir, command, 10_000);
+    const summary = summarizeTestRun(command, result);
+
+    expect(Buffer.byteLength(result.stdout)).toBeLessThanOrEqual(OUTPUT_CAP);
+    expect(result.stdout.endsWith('2 passed, 2 total\n')).toBe(true);
+    expect(summary.passed).toBe(2);
+    expect(summary.total).toBe(2);
+    expect(summary.countsKnown).toBe(true);
+    expect(summary.outputCapture?.stdout).toMatchObject({ truncated: true, retainedRange: 'tail', limitBytes: OUTPUT_CAP });
+    expect(summary.failedTestsComplete).toBe(false);
+    expect(summary.note).toContain('stdout tail');
+  });
+
+  it('retains the final failure summary from long stderr and marks names incomplete', async () => {
+    const dir = createTempDir();
+    const command = `node -e 'process.stderr.write("x".repeat(450000) + "\\nFAIL src/late.test.ts > suite > final failure\\n2 failed, 2 total\\n"); process.exitCode = 1'`;
+    const result = await runShellCommand(dir, command, 10_000);
+    const summary = summarizeTestRun(command, result);
+
+    expect(result.stdout).toBe('');
+    expect(Buffer.byteLength(result.stderr)).toBeLessThanOrEqual(OUTPUT_CAP);
+    expect(result.stderr).toContain('2 failed, 2 total');
+    expect(summary.countsKnown).toBe(true);
+    expect(summary.failed).toBe(2);
+    expect(summary.total).toBe(2);
+    expect(summary.failedTests).toContain('src/late.test.ts > suite > final failure');
+    expect(summary.outputCapture?.stderr).toMatchObject({ truncated: true, retainedRange: 'tail', limitBytes: OUTPUT_CAP });
+    expect(summary.failedTestsComplete).toBe(false);
+    expect(summary.note).toContain('failed test names may be incomplete');
+  });
+
+  it('keeps a single chunk larger than the cap bounded while preserving its tail', () => {
+    const chunk = Buffer.alloc(OUTPUT_CAP + 4, 0x78);
+    chunk.write('tail', chunk.length - 4);
+
+    const result = appendOutputChunk(Buffer.alloc(0), chunk);
+
+    expect(result.truncated).toBe(true);
+    expect(result.buffer.length).toBe(OUTPUT_CAP);
+    expect(result.buffer.toString('utf8').endsWith('tail')).toBe(true);
   });
 
   it('kills a command after the timeout', async () => {
