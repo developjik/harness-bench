@@ -36,12 +36,13 @@ prompt (the commit message plus the rules), the test command and the gold diff s
 ```sh
 git clone https://github.com/developjik/harness-bench
 cd harness-bench
+nvm use
 npm ci
 npm run build
 npm link            # optional, puts `harness-bench` on PATH
 ```
 
-Node.js 20 or newer. The only native dependency is `better-sqlite3` (prebuilt binaries are used);
+Published runtime: Node.js 20 or newer. Source development: Node.js22.12.0 via `nvm use`. The only native dependency is `better-sqlite3` (prebuilt binaries are used);
 pass `--store jsonl` if you would rather not have it.
 
 ## 60-second demo (no tokens, no network)
