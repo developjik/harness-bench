@@ -31,6 +31,7 @@ jobs:
       - name: Export and replay without starting a driver
         working-directory: harness-bench
         run: |
+          node scripts/test-selection-export.mjs ../sqlite-graph-71
           node scripts/export-selection-graph.mjs ../sqlite-graph-71 ../sqlite-graph-71 "$RUNNER_TEMP/selection-graph.json"
           node dist/bin/cli.js select --repo ../sqlite-graph-71 --graph-snapshot "$RUNNER_TEMP/selection-graph.json" --count 3 --seed 42 --out "$RUNNER_TEMP/selection-result.json"
           node scripts/check-selection-replay.mjs "$RUNNER_TEMP/selection-result.json"
