@@ -1,8 +1,8 @@
 /** Runs the repository's test command and turns its output into a TestSummary. */
 
 import { spawn } from 'node:child_process';
-import type { TestSummary } from './types.js';
-import { nowIso, truncateTail } from './util.js';
+import type { OutputCapture, OutputStreamCapture, TestSummary } from './types.js';
+import { nowIso } from './util.js';
 
 export interface CommandResult {
   code: number | null;
@@ -10,13 +10,48 @@ export interface CommandResult {
   stderr: string;
   timedOut: boolean;
   durationMs: number;
+  outputCapture?: OutputCapture;
 }
 
-const OUTPUT_CAP = 400_000;
+export const OUTPUT_CAP = 400_000;
 
 export function stripAnsi(text: string): string {
   // eslint-disable-next-line no-control-regex
   return text.replace(/\x1b\[[0-9;?]*[A-Za-z]/g, '');
+}
+
+/** Append a chunk while keeping only the newest `limit` bytes. */
+export function appendOutputChunk(
+  previous: Buffer,
+  chunk: Buffer,
+  limit = OUTPUT_CAP,
+): { buffer: Buffer; truncated: boolean } {
+  if (!Number.isSafeInteger(limit) || limit < 0) {
+    throw new RangeError('output limit must be a non-negative safe integer');
+  }
+
+  const truncated = previous.length + chunk.length > limit;
+  const chunkTail = chunk.subarray(Math.max(0, chunk.length - limit));
+  const previousLimit = Math.max(0, limit - chunkTail.length);
+  const previousTail = previous.subarray(Math.max(0, previous.length - previousLimit));
+  return { buffer: Buffer.concat([previousTail, chunkTail]), truncated };
+}
+
+function decodeOutputTail(buffer: Buffer): string {
+  // A byte cap can start in the middle of a UTF-8 character. Drop only its
+  // leading continuation bytes so the returned text begins at a code point.
+  let start = 0;
+  while (start < buffer.length && (((buffer[start] ?? 0) & 0xc0) === 0x80)) start += 1;
+  return buffer.subarray(start).toString('utf8');
+}
+
+function streamCapture(buffer: Buffer, truncated: boolean): OutputStreamCapture {
+  return {
+    truncated,
+    retainedBytes: buffer.length,
+    limitBytes: OUTPUT_CAP,
+    retainedRange: truncated ? 'tail' : 'complete',
+  };
 }
 
 export async function runShellCommand(
@@ -41,17 +76,22 @@ export async function runShellCommand(
       stdio: ['ignore', 'pipe', 'pipe'],
     });
 
-    let stdout = '';
-    let stderr = '';
+    let stdout = Buffer.alloc(0);
+    let stderr = Buffer.alloc(0);
+    let stdoutTruncated = false;
+    let stderrTruncated = false;
     let timedOut = false;
     let settled = false;
 
     const append = (target: 'out' | 'err', chunk: Buffer): void => {
-      const text = chunk.toString('utf8');
       if (target === 'out') {
-        if (stdout.length < OUTPUT_CAP) stdout += text;
-      } else if (stderr.length < OUTPUT_CAP) {
-        stderr += text;
+        const next = appendOutputChunk(stdout, chunk);
+        stdout = next.buffer;
+        stdoutTruncated ||= next.truncated;
+      } else {
+        const next = appendOutputChunk(stderr, chunk);
+        stderr = next.buffer;
+        stderrTruncated ||= next.truncated;
       }
     };
 
@@ -73,10 +113,14 @@ export async function runShellCommand(
       clearTimeout(timer);
       resolve({
         code: timedOut ? null : code,
-        stdout: truncateTail(stdout, OUTPUT_CAP),
-        stderr: truncateTail(stderr, OUTPUT_CAP),
+        stdout: decodeOutputTail(stdout),
+        stderr: decodeOutputTail(stderr),
         timedOut,
         durationMs: Date.now() - started,
+        outputCapture: {
+          stdout: streamCapture(stdout, stdoutTruncated),
+          stderr: streamCapture(stderr, stderrTruncated),
+        },
       });
     };
 
@@ -250,16 +294,40 @@ export function parseFailedTests(text: string): string[] {
   return names.slice(0, 200);
 }
 
+function completeStreamCapture(text: string): OutputStreamCapture {
+  return {
+    truncated: false,
+    retainedBytes: Buffer.byteLength(text),
+    limitBytes: OUTPUT_CAP,
+    retainedRange: 'complete',
+  };
+}
+
+function outputTruncationNote(capture: OutputCapture): string | undefined {
+  if (!capture.stdout.truncated && !capture.stderr.truncated) return undefined;
+  const describe = (name: 'stdout' | 'stderr', stream: OutputStreamCapture): string =>
+    `${name} ${stream.retainedRange} (${stream.retainedBytes}/${stream.limitBytes} bytes)`;
+  return `output truncated; retained ranges: ${describe('stdout', capture.stdout)}, ${describe('stderr', capture.stderr)}; failed test names may be incomplete`;
+}
+
 export function summarizeTestRun(command: string, result: CommandResult): TestSummary {
   const combined = stripAnsi(`${result.stdout}\n${result.stderr}`);
   const counts = findCounts(combined);
   const failedTests = parseFailedTests(combined);
+  const outputCapture = result.outputCapture ?? {
+    stdout: completeStreamCapture(result.stdout),
+    stderr: completeStreamCapture(result.stderr),
+  };
+  const outputNote = outputTruncationNote(outputCapture);
   const base = {
     command,
     ran: true,
     exitCode: result.code,
     durationMs: result.durationMs,
     timedOut: result.timedOut,
+    outputCapture,
+    failedTestsComplete: !outputCapture.stdout.truncated && !outputCapture.stderr.truncated,
+    ...(outputNote ? { note: outputNote } : {}),
   };
 
   if (counts) {
@@ -281,7 +349,9 @@ export function summarizeTestRun(command: string, result: CommandResult): TestSu
       ...(countsUncertain
         ? {
             countsUncertain: true,
-            note: `exit code ${result.code} with no recorded test failures — counts may be incomplete`,
+            note: [base.note, `exit code ${result.code} with no recorded test failures — counts may be incomplete`]
+              .filter(Boolean)
+              .join('; '),
           }
         : {}),
     };
@@ -312,6 +382,11 @@ export function emptyTestSummary(command: string, reason: string): TestSummary {
     passRate: 0,
     failedTests: [],
     countsKnown: false,
+    outputCapture: {
+      stdout: { truncated: false, retainedBytes: 0, limitBytes: OUTPUT_CAP, retainedRange: 'complete' },
+      stderr: { truncated: false, retainedBytes: 0, limitBytes: OUTPUT_CAP, retainedRange: 'complete' },
+    },
+    failedTestsComplete: true,
     durationMs: 0,
     note: reason,
   };
