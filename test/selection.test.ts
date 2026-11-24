@@ -73,9 +73,13 @@ it('rejects partial clones before historical object reads',async()=>{
 });
 
 it('portable paths reject Windows traversal, drive, stream and device forms',()=>{
- for(const p of ['..\\escape','folder/..\\escape','C:/outside','file:stream','folder/NUL.txt','folder/x.','folder/x '])expect(safeSelectionPath(p)).toBe(false);
+ for(const p of ['..\\escape','folder/..\\escape','C:/outside','file:stream','folder/NUL.txt','folder/x.','folder/x ','docs/a?.md','docs/COM¹.txt','docs/x*.md','docs/a|b.md'])expect(safeSelectionPath(p)).toBe(false);
  expect(safeSelectionPath('src/valid.ts')).toBe(true);
 });
 it('accepts explicit false promisor and rejects legacy partial clone',()=>{
  const f=buildFixtureRepo();try{gitOrThrow(f.repo.dir,['config','remote.origin.promisor','false']);expect(()=>assertFullSelectionClone(f.repo.dir)).not.toThrow();gitOrThrow(f.repo.dir,['config','extensions.partialClone','origin']);expect(()=>assertFullSelectionClone(f.repo.dir)).toThrow(/full clone/);}finally{f.repo.cleanup();}
+});
+
+it('rejects a leftover partialclonefilter even when promisor is false',()=>{
+ const f=buildFixtureRepo();try{gitOrThrow(f.repo.dir,['config','remote.origin.promisor','false']);gitOrThrow(f.repo.dir,['config','remote.origin.partialclonefilter','blob:none']);expect(()=>assertFullSelectionClone(f.repo.dir)).toThrow(/full clone/);}finally{f.repo.cleanup();}
 });
