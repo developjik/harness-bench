@@ -21,9 +21,10 @@ try {
  // Index only committed regular blobs, never ignored local files or symlinks.
  for(const row of git(repo,'ls-tree','-rz','--full-tree',commit).split('\0')) {
   const m=/^(100644|100755) blob ([a-f0-9]{40})\t([\s\S]+)$/.exec(row);if(!m)continue;
-  const rel=m[3];if(!safeSelectionPath(rel))throw new Error('unsafe git path');
+  const rel=m[3];
   // Match source/doc/manifest/config inputs, do not read unrelated large binaries.
   if(!/\.(?:[cm]?[jt]sx?|md|mdx|markdown|json)$/i.test(rel))continue;
+  if(!safeSelectionPath(rel))throw new Error('unsafe git path');
   const size=Number(git(repo,'cat-file','-s',m[2]).trim());
   if(!Number.isSafeInteger(size)||size<0)throw new Error('invalid blob size');
   if(size>512*1024)continue;
