@@ -10,7 +10,7 @@ const git=(...args)=>{const r=spawnSync('git',args,{cwd:repo,encoding:'utf8'});a
 const exportGraph=(name,ok=true)=>{
  const path=join(temp,name+'.json');
  const r=spawnSync(process.execPath,['scripts/export-selection-graph.mjs',repo,companion,path],{cwd:process.cwd(),encoding:'utf8'});
- if(!ok){assert.notEqual(r.status,0);return;}
+ if(!ok){assert.equal(r.status,1);assert.match(r.stderr,/offline selection requires a full clone, not a partial\/promisor clone/);return;}
  assert.equal(r.status,0,r.stderr);return JSON.parse(readFileSync(path,'utf8'));
 };
 try{
@@ -22,6 +22,7 @@ try{
  writeFileSync(join(repo,'src/other.ts'),'export const value=1;\n');
  writeFileSync(join(repo,'src/UPPER.TS'),'export const upper=1;\n');
  writeFileSync(join(repo,'README.MD'),'# Uppercase\n');
+ writeFileSync(join(repo,'irrelevant?.txt'),'not an index input');
  writeFileSync(join(repo,'unrelated.bin'),Buffer.alloc(17*1024*1024));
  git('add','.');git('commit','-qm','fixture');
  const graph=exportGraph('first');
