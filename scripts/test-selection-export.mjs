@@ -22,7 +22,7 @@ try{
  writeFileSync(join(repo,'src/other.ts'),'export const value=1;\n');
  writeFileSync(join(repo,'src/UPPER.TS'),'export const upper=1;\n');
  writeFileSync(join(repo,'README.MD'),'# Uppercase\n');
- writeFileSync(join(repo,'irrelevant?.txt'),'not an index input');
+ if(process.platform!=='win32')writeFileSync(join(repo,'irrelevant?.txt'),'not an index input');
  writeFileSync(join(repo,'unrelated.bin'),Buffer.alloc(17*1024*1024));
  git('add','.');git('commit','-qm','fixture');
  const graph=exportGraph('first');
