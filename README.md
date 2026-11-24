@@ -36,12 +36,14 @@ prompt (the commit message plus the rules), the test command and the gold diff s
 ```sh
 git clone https://github.com/developjik/harness-bench
 cd harness-bench
+nvm install
+nvm use
 npm ci
 npm run build
 npm link            # optional, puts `harness-bench` on PATH
 ```
 
-Node.js 20 or newer. The only native dependency is `better-sqlite3` (prebuilt binaries are used);
+Published runtime: Node.js 20 or newer. Source development: Node.js22.12.0 via `nvm use`. The only native dependency is `better-sqlite3` (prebuilt binaries are used);
 pass `--store jsonl` if you would rather not have it.
 
 ## 60-second demo (no tokens, no network)
@@ -234,3 +236,7 @@ MIT © Jeong Ingwon (developjik)
 Regression checks compare complete test IDs from the same command and runner before counts. Vitest file+case paths and pytest node IDs are supported. File errors, different runners, truncated output, unsupported runners and legacy records without complete IDs report `unknown` even if failure counts stay equal or decrease, earning no 0.1 regression-free credit. Increased failure counts still use the aggregate fallback. New runs use the new assessment. Existing saved scores remain unchanged in the CLI report; the exported rescore API can recalculate them from stored metadata.
 
 Rescore cannot recover IDs truncated or omitted by an older parser. Rerun those tests to collect new identities.
+
+## Development baseline (DEV-128)
+
+Use Node.js 22.12.0 (`.nvmrc`) for development and CI. Vitest 5.1.1 requires Node 22.12+ on its supported release lines; Node 20.19 is outside its declared development support range. It may execute there, but CI does not treat that as supported test-runner usage. This development requirement does not change the package engine declaration. Runtime compatibility must be checked using the built package, separately from the test runner. TypeScript 7.0.2 is the development compiler baseline.
