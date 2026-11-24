@@ -352,8 +352,8 @@ async function commandSelect(parsed: ParsedArgs, io: CliIo): Promise<number> {
   if (!file) throw new UsageError('--graph-snapshot is required');
   const { gitOrThrow } = await import('./git.js');
   if (gitOrThrow(repo, ['status', '--porcelain', '--untracked-files=normal']).trim()) throw new UsageError('select requires a clean checkout');
-  const { runGit } = await import('./git.js');
-  if (runGit(repo, ['config', '--get-regexp', '^remote\\..*\\.promisor$']).stdout.trim()) throw new UsageError('offline selection requires a full clone, not a partial/promisor clone');
+  const { assertFullSelectionClone } = await import('./selection-safety.js');
+  try { assertFullSelectionClone(repo); } catch (error) { throw new UsageError((error as Error).message); }
   const head = gitOrThrow(repo, ['rev-parse', 'HEAD']).trim();
   const graph = readSelectionGraph(resolve(file), repo, head);
   const pool = mineTasks({ repo, limit: numberFlag(parsed, 'limit', 200), maxTasks: numberFlag(parsed, 'max-tasks', 25), testCommand: last(parsed, 'test-cmd'), maxDiffLines: numberFlag(parsed, 'max-diff-lines', 1200), since: last(parsed, 'since') });
