@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { writeFileSync, rmSync } from 'node:fs';
+import { writeFileSync, rmSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { compareSelections, readSelectionGraph, digest, seededRandom, type SelectionGraph } from '../src/selection.js';
 import { main } from '../src/cli.js';
@@ -19,7 +19,7 @@ describe('offline selection',()=>{
  });
  it('seed changes sampling, never candidate pool, baseline, or count',()=>{
   const a=compareSelections(tasks,graph,4,0),b=compareSelections(tasks,graph,4,45);
-  expect(a.weighted.ids).not.toEqual(b.weighted.ids);expect(a.candidateHash).toBe(b.candidateHash);expect(a.baseline).toEqual(b.baseline);
+  expect(a.weighted.ids).not.toEqual(b.weighted.ids);expect(a.candidateHash).toBe(b.candidateHash);expect(compareSelections(tasks.map(t=>({...t,goldPatch:t.goldPatch+'abbreviated display'})),graph,4,0).candidateHash).toBe(a.candidateHash);expect(a.baseline).toEqual(b.baseline);
  });
  it('preserves no-effect and worse-effect metrics rather than declaring a win',()=>{
   const a=compareSelections(tasks.slice(0,4),graph,4,1);
@@ -50,8 +50,8 @@ describe('graph binding and CLI',()=>{
    for(const bad of [{...good,commit:'0'.repeat(40)},{...good,files:[{path:'../secret',blob}]},{...good,files:[...good.files,...good.files]},{...good,files:[{path:'src/math.js',blob:'0'.repeat(40)}]},{...good,edges:[['src/math.js','missing']]},{...good,producer:{...good.producer,name:'other'}}])expect(()=>read(bad)).toThrow();
    const io={out:()=>{},err:()=>{}};
    writeFileSync(file,JSON.stringify(good));
-   return main(['select','--repo',fixture.repo.dir,'--graph-snapshot',file,'--count','1','--seed','0','--out',join(dir,'report.json')],io).then(code=>{
-    expect(code).toBe(0);expect(mineTasks({repo:fixture.repo.dir}).tasks).toHaveLength(1);
+   return main(['select','--repo',fixture.repo.dir,'--graph-snapshot',file,'--count','1','--seed','0','--test-cmd',`node -e "require('fs').writeFileSync('${join(dir,'MUST-NOT-EXIST')}','ran')"`,'--out',join(dir,'report.json')],io).then(code=>{
+    expect(code).toBe(0);expect(existsSync(join(dir,'MUST-NOT-EXIST'))).toBe(false);expect(mineTasks({repo:fixture.repo.dir}).tasks).toHaveLength(1);
     return main(['select','--repo',fixture.repo.dir,'--graph-snapshot',file,'--count','1','--out',file],io);
    }).then(code=>expect(code).toBe(1)).finally(()=>{fixture.repo.cleanup();rmSync(dir,{recursive:true,force:true});});
   } catch(e){fixture.repo.cleanup();rmSync(dir,{recursive:true,force:true});throw e;}
@@ -65,4 +65,8 @@ describe('graph binding and CLI',()=>{
    expect(err.join('')).toContain('clean checkout');
   }finally{f.repo.cleanup();}
  });
+});
+
+it('rejects partial clones before historical object reads',async()=>{
+ const f=buildFixtureRepo();try{gitOrThrow(f.repo.dir,['config','remote.origin.promisor','true']);const err:string[]=[];expect(await main(['select','--repo',f.repo.dir,'--graph-snapshot','missing'],{out:()=>{},err:s=>err.push(s)})).toBe(2);expect(err.join('')).toContain('full clone');}finally{f.repo.cleanup();}
 });
