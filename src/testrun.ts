@@ -310,6 +310,27 @@ function outputTruncationNote(capture: OutputCapture): string | undefined {
   return `output truncated; retained ranges: ${describe('stdout', capture.stdout)}, ${describe('stderr', capture.stderr)}; failed test names may be incomplete`;
 }
 
+/** Only file-qualified identities with an unambiguous runner are comparable. */
+function failureIdentity(text: string, failed: number | undefined, complete: boolean): TestSummary['failureIdentity'] {
+  let runner: string | undefined;
+  let ids: string[] = [];
+  if (/Test Files/.test(text)) {
+    runner = 'vitest';
+    ids = [...text.matchAll(/^\s*FAIL\s+(\S+)\s+>\s+(.+)$/gm)].map((m) => `${m[1]} > ${m[2]?.trim()}`);
+  } else if (/short test summary info|=+.*(?:failed|passed).*in \d/.test(text)) {
+    runner = 'pytest';
+    ids = [...text.matchAll(/^FAILED\s+(\S+::\S+)/gm)].map((m) => m[1]!);
+  }
+  if (!runner) return undefined;
+  ids = [...new Set(ids)];
+  return {
+    runner,
+    unit: 'test',
+    ids,
+    complete: complete && failed !== undefined && ids.length === failed,
+  };
+}
+
 export function summarizeTestRun(command: string, result: CommandResult): TestSummary {
   const combined = stripAnsi(`${result.stdout}\n${result.stderr}`);
   const counts = findCounts(combined);
@@ -327,6 +348,7 @@ export function summarizeTestRun(command: string, result: CommandResult): TestSu
     timedOut: result.timedOut,
     outputCapture,
     failedTestsComplete: !outputCapture.stdout.truncated && !outputCapture.stderr.truncated,
+    failureIdentity: failureIdentity(combined, counts?.failed, !outputCapture.stdout.truncated && !outputCapture.stderr.truncated),
     ...(outputNote ? { note: outputNote } : {}),
   };
 
