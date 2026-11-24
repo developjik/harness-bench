@@ -34,6 +34,27 @@ function summary(overrides: Partial<TestSummary> = {}): TestSummary {
 
 function sampleTask(id:string):MinedTask {return {id,implFiles:[],implPatch:''} as unknown as MinedTask;}
 describe('regression identity comparison',()=>{
+  const parseOutput=(stdout:string)=>summarizeTestRun('test',{stdout,stderr:'',code:1,timedOut:false,durationMs:1});
+  it('preserves spaces in pytest parameter IDs',()=>{
+    const a=parseOutput('FAILED tests/test_a.py::test_x[case A] - assert false\n=== 1 failed, 2 passed in 0.12s ===');
+    const b=parseOutput('FAILED tests/test_a.py::test_x[case B] - assert false\n=== 1 failed, 2 passed in 0.12s ===');
+    expect(assessRegressions(a,b)).toMatchObject({status:'detected',regressions:['tests/test_a.py::test_x[case B]']});
+  });
+  it('does not claim complete pytest IDs with ambiguous summary delimiters',()=>{
+    expect(parseOutput('FAILED tests/test_a.py::test_x[case - B] - assertion\n=== 1 failed in 0.12s ===').failureIdentity?.complete).toBe(false);
+  });
+  it.each([
+    ' FAIL src/a.test.ts > suite > A\n FAIL src/b.test.ts\n Test Files 2 failed (2)\n Tests 1 failed (1)',
+    'FAILED tests/a.py::A - failed\nERROR tests/b.py::B - fixture error\n=== 1 failed, 1 error in 0.12s ==='
+  ])('execution errors prevent regression-free credit',text=>{
+    const run=parseOutput(text);expect(run.failureIdentity?.complete).toBe(false);
+    expect(assessRegressions(run,run).status).toBe('unknown');
+  });
+  it('includes named Vitest project identity',()=>{
+    const parse=(id:string)=>parseOutput(` FAIL |browser| src/a.test.ts > suite > ${id}\n Test Files 1 failed (1)\n Tests 1 failed (1)`);
+    expect(assessRegressions(parse('A'),parse('B'))).toMatchObject({status:'detected',regressions:['|browser| src/a.test.ts > suite > B']});
+  });
+
   it.each(['vitest','pytest'])('detects A to B from real %s output', runner=>{
     const parse=(id:string)=>summarizeTestRun(runner,{code:1,timedOut:false,durationMs:1,stderr:'',stdout:runner==='vitest' ? ` FAIL src/a.test.ts > suite > ${id}\n Test Files 1 failed (1)\n Tests 1 failed | 2 passed (3)` : `FAILED tests/test_a.py::${id} - assert false\n=== 1 failed, 2 passed in 0.12s ===`});
     const a=parse('A'), b=parse('B');
