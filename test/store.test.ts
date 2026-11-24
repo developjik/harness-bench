@@ -50,6 +50,18 @@ function summary(overrides: Partial<TestSummary> = {}): TestSummary {
     countsKnown: true,
     durationMs: 100,
     ...overrides,
+    failureIdentity:
+      overrides.failureIdentity ??
+      (overrides.failedTests
+        ? {
+            runner: 'fixture',
+            unit: 'test',
+            ids: overrides.failedTests,
+            complete:
+              overrides.failedTests.length === (overrides.failed ?? 0) &&
+              overrides.failedTests.every((id) => !/[\/]| > |::|›/.test(id)),
+          }
+        : undefined),
   };
 }
 
@@ -153,14 +165,16 @@ describe('scoreRun', () => {
     expect(score.total).toBeLessThan(1);
   });
 
-  it('does not invent regressions when fewer tests fail than on the base', () => {
+  it('does not call incomplete failure names a proven improvement', () => {
     const score = scoreRun(task, {
       patch: task.implPatch,
       patchFiles: ['src/math.js'],
       test: summary({ exitCode: 1, passed: 3, failed: 1, total: 4, passRate: 0.75, failedTests: ['multiplies'] }),
       baseline: summary({ exitCode: 1, passed: 0, failed: 4, total: 4, passRate: 0, failedTests: ['adds', 'multiplies'] }),
     });
-    expect(score.regressionFree).toBe(true);
+    expect(score.regressionFree).toBe(false);
+    expect(score.regressionStatus).toBe('unknown');
+    expect(score.regressions).toEqual([]);
   });
 
   it('penalises an empty patch', () => {
