@@ -35,12 +35,13 @@ git 히스토리 ─mine─▶ 과제 ─┬─ git worktree @ 부모 커밋 + �
 ```sh
 git clone https://github.com/developjik/harness-bench
 cd harness-bench
+nvm use
 npm ci
 npm run build
 npm link            # 선택: `harness-bench`를 PATH에 등록
 ```
 
-Node.js 20 이상. 네이티브 의존성은 `better-sqlite3` 하나뿐이며(prebuilt 바이너리 사용) 싫다면
+배포 패키지 런타임은 Node.js20 이상입니다. 소스 개발은 `nvm use`로 Node.js22.12.0을 선택합니다. 네이티브 의존성은 `better-sqlite3` 하나뿐이며(prebuilt 바이너리 사용) 싫다면
 `--store jsonl`로 피할 수 있습니다.
 
 ## 60초 데모 (토큰 0원, 네트워크 불필요)
