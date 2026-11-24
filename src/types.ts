@@ -9,6 +9,19 @@ export interface GoldStats {
   removed: number;
 }
 
+/** Describes which byte range of a command stream is present in the bounded capture. */
+export interface OutputStreamCapture {
+  truncated: boolean;
+  retainedBytes: number;
+  limitBytes: number;
+  retainedRange: 'complete' | 'tail';
+}
+
+export interface OutputCapture {
+  stdout: OutputStreamCapture;
+  stderr: OutputStreamCapture;
+}
+
 /** One benchmark case mined from the repository history. */
 export interface MinedTask {
   id: string;
@@ -46,6 +59,10 @@ export interface TestSummary {
   passRate: number;
   failedTests: string[];
   countsKnown: boolean;
+  /** Byte limits and retained ranges for captured stdout and stderr. */
+  outputCapture?: OutputCapture;
+  /** False when truncation means earlier failure names may be absent. */
+  failedTestsComplete?: boolean;
   /** Counts were parsed, but a failing exit code says they cannot explain the run. */
   countsUncertain?: boolean;
   durationMs: number;
