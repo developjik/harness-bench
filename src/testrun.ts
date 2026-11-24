@@ -157,7 +157,7 @@ function countsFromSummaryLine(line: string): Counts | null {
     else if (key === 'total') counts.total = value;
   }
   // Jest prints "Tests: 1 failed, 2 passed, 3 total" and vitest "Tests  1 failed | 2 passed (3)".
-  const parenthesized = /\\((\\d+)\\)\\s*$/.exec(line);
+  const parenthesized = /\((\d+)\)\s*$/.exec(line);
   if (counts.total < 0 && parenthesized) counts.total = Number(parenthesized[1]);
   if (!matched) return null;
   if (counts.passed < 0) counts.passed = 0;
@@ -190,7 +190,7 @@ function findCounts(text: string): Counts | null {
   let cargoFailed = 0;
   let cargoSkipped = 0;
   for (const match of text.matchAll(
-    /test result:\\s*\\w+\\.\\s*(\\d+)\\s+passed;\\s*(\\d+)\\s+failed;\\s*(\\d+)\\s+ignored/gi,
+    /test result:\s*\w+\.\s*(\d+)\s+passed;\s*(\d+)\s+failed;\s*(\d+)\s+ignored/gi,
   )) {
     cargoMatched = true;
     cargoPassed += Number(match[1]);
@@ -209,14 +209,14 @@ function findCounts(text: string): Counts | null {
 
   // Lines that look like a suite summary, newest last (some runners print per-file summaries too).
   const candidates = lines.filter((line) => {
-    if (/^\\s*$/.test(line)) return false;
-    if (/^\\s*[✓✔×✗·]/.test(line)) return false;
-    if (/^\\s*FAIL\\s/.test(line)) return false;
-    return /(\\d+\\s+(passed|failed))|Tests?:/i.test(line);
+    if (/^\s*$/.test(line)) return false;
+    if (/^\s*[✓✔×✗·]/.test(line)) return false;
+    if (/^\s*FAIL\s/.test(line)) return false;
+    return /(\d+\s+(passed|failed))|Tests?:/i.test(line);
   });
 
   // Prefer the global "Tests" line (vitest/jest), else the last summary-ish line.
-  const global = [...candidates].reverse().find((line) => /^\\s*(Tests?|Test Files)\\b/i.test(line) && !/Test Files/i.test(line));
+  const global = [...candidates].reverse().find((line) => /^\s*(Tests?|Test Files)\b/i.test(line) && !/Test Files/i.test(line));
   const chosen = global ?? candidates[candidates.length - 1];
   if (chosen) {
     const counts = countsFromSummaryLine(chosen);
@@ -224,7 +224,7 @@ function findCounts(text: string): Counts | null {
   }
 
   // Aggregate per-file lines such as "1 passed (1)" repeated per file.
-  const perFile = candidates.filter((line) => /^\\s*\\d+\\s+passed/i.test(line) || /^\\s*(\\d+\\s+failed)/i.test(line));
+  const perFile = candidates.filter((line) => /^\s*\d+\s+passed/i.test(line) || /^\s*(\d+\s+failed)/i.test(line));
   if (perFile.length > 1) {
     let passed = 0;
     let failed = 0;
@@ -245,8 +245,8 @@ export function parseFailedTests(text: string): string[] {
   const names: string[] = [];
   const add = (raw: string): void => {
     const name = raw
-      .replace(/\\s*\\(\\d+(\\.\\d+)?\\s*(ms|s)\\)\\s*$/, '')
-      .replace(/\\s+\\d+(\\.\\d+)?\\s*(ms|s)$/, '')
+      .replace(/\s*\(\d+(\.\d+)?\s*(ms|s)\)\s*$/, '')
+      .replace(/\s+\d+(\.\d+)?\s*(ms|s)$/, '')
       .trim();
     if (name.length === 0 || name.length > 300) return;
     if (names.includes(name)) return;
@@ -254,40 +254,40 @@ export function parseFailedTests(text: string): string[] {
   };
 
   for (const line of text.split('\n')) {
-    const cleaned = line.replace(/\\s+$/, '');
+    const cleaned = line.replace(/\s+$/, '');
     let match: RegExpExecArray | null;
 
-    if ((match = /^\\s*FAIL\\s+(\\S+?)(?:\\s+>\\s+(.+))?$/.exec(cleaned))) {
+    if ((match = /^\s*FAIL\s+(\S+?)(?:\s+>\s+(.+))?$/.exec(cleaned))) {
       add(`${match[1]}${match[2] ? ` > ${match[2]}` : ''}`);
       // jest/vitest also list the failing case separately; keep both.
       continue;
     }
-    if ((match = /^\\s*[×✗✖]\\s+(.+)$/.exec(cleaned))) {
+    if ((match = /^\s*[×✗✖]\s+(.+)$/.exec(cleaned))) {
       add(match[1] ?? '');
       continue;
     }
-    if ((match = /^\\s*●\\s+(.+)$/.exec(cleaned))) {
+    if ((match = /^\s*●\s+(.+)$/.exec(cleaned))) {
       const name = match[1] ?? '';
       if (!/console|deprecation/i.test(name)) add(name);
       continue;
     }
-    if ((match = /^FAILED\\s+(\\S+?)(?:::(\\S+))?(?:\\s+-\\s+.*)?$/.exec(cleaned))) {
+    if ((match = /^FAILED\s+(\S+?)(?:::(\S+))?(?:\s+-\s+.*)?$/.exec(cleaned))) {
       add(match[2] ? `${match[1]}::${match[2]}` : (match[1] ?? ''));
       continue;
     }
-    if ((match = /^not ok \\d+\\s+-\\s+(.+?)(?:\\s+#.*)?$/.exec(cleaned))) {
+    if ((match = /^not ok \d+\s+-\s+(.+?)(?:\s+#.*)?$/.exec(cleaned))) {
       add(match[1] ?? '');
       continue;
     }
-    if ((match = /^✖\\s+(.+)$/.exec(cleaned))) {
+    if ((match = /^✖\s+(.+)$/.exec(cleaned))) {
       add(match[1] ?? '');
       continue;
     }
-    if ((match = /^--- FAIL:\\s+(\\S+)/.exec(cleaned))) {
+    if ((match = /^--- FAIL:\s+(\S+)/.exec(cleaned))) {
       add(match[1] ?? '');
       continue;
     }
-    if ((match = /^test\\s+(\\S+)\\s+\\.\\.\\.\\s+FAILED/.exec(cleaned))) {
+    if ((match = /^test\s+(\S+)\s+\.\.\.\s+FAILED/.exec(cleaned))) {
       add(match[1] ?? '');
     }
   }
